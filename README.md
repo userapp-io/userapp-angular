@@ -136,17 +136,17 @@ Module with AngularJS services and directives that integrates [UserApp](https://
 
   Event triggered when user logs in
 	
-	$rootScope.$on('user.login', function() {
-		console.log(user.current);
-	});
+		$rootScope.$on('user.login', function() {
+			console.log(user.current);
+		});
 	
 * **user.logout**
 
   Event triggered when user logs out
 	
-	$rootScope.$on('user.logout', function() {
-		console.log('Bye!');
-	});
+		$rootScope.$on('user.logout', function() {
+			console.log('Bye!');
+		});
 
 ## Example
 
