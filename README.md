@@ -1,7 +1,7 @@
 UserApp AngularJS
 =================
 
-Module with AngularJS services and directives that integrates [UserApp](https://www.userapp.io/) seamlessly into your app.
+Module with AngularJS services and directives that integrates [UserApp](https://www.userapp.io/) seamlessly with your app.
 
 *UserApp is a cloud-based user management API for web apps with the purpose to relieve developers from having to program logic for user authentication, sign-up, invoicing, feature/property/permission management, and more.*
 
@@ -103,7 +103,7 @@ Module with AngularJS services and directives that integrates [UserApp](https://
 
 * **ua-login**
 
-  Add this to a form tag to attach it to the `user.login()` function.
+  Add this to a form tag to attach it to the `user.login()` function. Use `ua-error` to specify an error object.
 
 		<form ua-login ua-error="error-msg">
 			<input name="login" placeholder="Username"><br>
@@ -120,7 +120,7 @@ Module with AngularJS services and directives that integrates [UserApp](https://
 
 * **ua-signup**
 
-  Add this to a form tag to attach it to the `user.signup()` function. Use `ua-error` to specify an error object. Use `ua-is-email` on the login input to specify that login is the same as email. All input fields must have a name that is matching the [user's properties](https://app.userapp.io/#/docs/user/#properties).
+  Add this to a form tag to attach it to the `user.signup()` function. Use `ua-error` to specify an error object. Use `ua-is-email` on the login input to specify that login is the same as email. All input field names must reflect the [user's properties](https://app.userapp.io/#/docs/user/#properties).
 
 		<form ua-signup ua-error="error-msg">
 			<input name="first_name" placeholder="Name"><br>
