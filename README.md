@@ -77,7 +77,7 @@ Module with AngularJS services and directives that integrates [UserApp](https://
 
   Sign up a user, log in, and redirect to default route.
 
-		user.signup({ login: 'timothy', email: 'timothy.johanssn@userapp.io', password: 't1m0thy' }, function(error, result) {});
+		user.signup({ login: 'timothy', email: 'timothy.johansson@userapp.io', password: 't1m0thy' }, function(error, result) {});
 
 * **user.login(user[, callback])**
 
