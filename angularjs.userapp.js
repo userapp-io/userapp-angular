@@ -2,6 +2,7 @@
 
 
 // Module with AngularJS services and directives that integrates UserApp into your app
+// https://github.com/userapp-io/userapp-angular
 var userappModule = angular.module('UserApp', []);
 
 // Expose the UserApp API
@@ -123,6 +124,20 @@ userappModule.factory('user', function($rootScope, $route, $location) {
             });
 		},
 
+        // Sign up a new user and logs in
+        signup: function(user, callback) {
+            var that = this;
+            
+            UserApp.User.save(user, function(error, result) {
+                if (!error) {
+                    // Success - Log in the user
+                    that.login(user);
+                }
+
+                callback && callback(error, result);
+            });
+        },
+
         // Start new session / Login user
         login: function(user, callback) {
             var that = this;
@@ -240,17 +255,12 @@ userappModule.directive('uaSignup', function(user, UserApp) {
 					}
 				}
 				
-				// Sign up the user using the API
-				UserApp.User.save(object, function(error, result) {
-					if (error) {
-						if (attrs.uaError) {
-							angular.element(document.getElementById(attrs.uaError)).text(error.message);
-						}
-					} else {
-						// Success - Log in the user
-						user.login({ login: object.login, password: object.password });
-					}
-				});
+                // Sign up
+                user.signup(object, function(error, result) {
+                    if (error && attrs.uaError) {
+                        angular.element(document.getElementById(attrs.uaError)).text(error.message);
+                    }
+                });
 
 				return false;
 			});
