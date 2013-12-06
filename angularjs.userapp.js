@@ -120,7 +120,7 @@ userappModule.factory('user', function($rootScope, $route, $location) {
             // Load the logged in user
             this.loadUser(function(error, result) {
                 callback && callback(error, result);
-                $rootScope.$broadcast('login');
+                $rootScope.$broadcast('user.login');
             });
 		},
 
@@ -161,7 +161,7 @@ userappModule.factory('user', function($rootScope, $route, $location) {
             UserApp.User.logout(function(error) {
                 if (!error) {
                     that.reset();
-                    $rootScope.$broadcast('logout');
+                    $rootScope.$broadcast('user.logout');
                 }
 
                 callback && callback(error);
@@ -191,7 +191,7 @@ userappModule.factory('user', function($rootScope, $route, $location) {
                 UserApp.Token.heartbeat(function(error, result) {
                     if (error) {
                         that.reset();
-                        $rootScope.$broadcast('logout');
+                        $rootScope.$broadcast('user.logout');
                     } else {
                         status.authorized = result.alive;
                     }
