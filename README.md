@@ -1,24 +1,24 @@
 UserApp AngularJS
 =================
 
-Module with AngularJS services and directives that integrates [UserApp](https://www.userapp.io/) into your app.
+Module with AngularJS services and directives that integrates [UserApp](https://www.userapp.io/) seamlessly into your app.
 
 *UserApp is a cloud-based user management API for web apps with the purpose to relieve developers from having to program logic for user authentication, sign-up, invoicing, feature/property/permission management, and more.*
 
 ## Getting Started
 
-1. Include the UserApp JavaScript library and the AngularJS module into your app.
+1. Include the [UserApp JavaScript library](https://app.userapp.io/#/docs/libs/javascript/) and this AngularJS module in your index.html.
 
         <script src="https://app.userapp.io/js/userapp.client.js"></script>
         <script src="https://rawgithub.com/userapp-io/userapp-angular/master/angularjs.userapp.js"></script>
 
-2. Inject and initiate the service in your root scope using your [App Id](https://help.userapp.io/customer/portal/articles/1322336-how-do-i-find-my-app-id-):
+2. Inject and initiate the service in your root scope with your [App Id](https://help.userapp.io/customer/portal/articles/1322336-how-do-i-find-my-app-id-):
 
         .run(function($rootScope, user) {
             user.init({ appId: 'YOUR_APP_ID' });
         });
 
-3. Create routes + templates for login and signup, and use the directives to connect them to UserApp:
+3. Create routes + templates for login and signup, and use the directives to connect them to UserApp (examples: [login.html](https://github.com/userapp-io/userapp-angular/blob/master/example/partials/login.html) and [signup.html](https://github.com/userapp-io/userapp-angular/blob/master/example/partials/signup.html)):
 
         $routeProvider.when('/login', {templateUrl: 'partials/login.html'});
         $routeProvider.when('/signup', {templateUrl: 'partials/signup.html'});
@@ -28,6 +28,10 @@ Module with AngularJS services and directives that integrates [UserApp](https://
         $routeProvider.when('/login', {templateUrl: 'partials/login.html', public: true, login: true});
         $routeProvider.when('/signup', {templateUrl: 'partials/signup.html', public: true});
 
+  The `.otherwise()` route should be set to where you want your users to be redirected after login. Example:
+	
+		$routeProvider.otherwise({redirectTo: '/home'});
+
 5. Add a log out link:
     
         <a href="#" ua-logout>Log Out</a>
@@ -36,7 +40,7 @@ Module with AngularJS services and directives that integrates [UserApp](https://
 
         <div ng-show="user.authorized">Welcome!</div>
 
-7. User the `user` object to access properties on the logged in user:
+7. Use the `user` object to access properties on the logged in user:
 
         <div ng-show="user.authorized">Welcome {{ user.first_name }}!</div>
 
@@ -47,80 +51,80 @@ Module with AngularJS services and directives that integrates [UserApp](https://
 
 ### user
 
-The main service with all session handling etc.
+>The main service with all session handling etc.
 
-* .init(config)
+* **user.init(config)**
 
-Initiate the service with your [App Id](https://help.userapp.io/customer/portal/articles/1322336-how-do-i-find-my-app-id-).
+  Initiate the service with your [App Id](https://help.userapp.io/customer/portal/articles/1322336-how-do-i-find-my-app-id-).
 
-	user.init({ appId: 'YOUR_APP_ID' });
+		user.init({ appId: 'YOUR_APP_ID' });
 
-* .status()
+* **user.status()**
 
-Returns the status of the session:
+  Returns the status of the session:
 
-	{ authorized: false }
+		{ authorized: false }
 
-* .appId([value])
+* **user.appId([value])**
 
-Sets and gets the App Id.
+  Sets and gets the App Id.
 
-* .token([value])
+* **user.token([value])**
 
-Sets and gets the session token (stored in a cookie).
+  Sets and gets the session token (stored in a cookie).
 
-* .signup(user[, callback])
+* **user.signup(user[, callback])**
 
-Sign up a user, log in, and redirect to default route.
+  Sign up a user, log in, and redirect to default route.
 
-	user.signup({ login: 'timothy', email: 'timothy.johanssn@userapp.io', password: 't1m0thy' }, function(error, result) {});
+		user.signup({ login: 'timothy', email: 'timothy.johanssn@userapp.io', password: 't1m0thy' }, function(error, result) {});
 
-* .login(user[, callback])
+* **user.login(user[, callback])**
 
-Log in a user and redirect to default route.
+  Log in a user and redirect to default route.
 
-	user.login({ login: 'timothy', password: 't1m0thy' }, function(error, result) {});
+		user.login({ login: 'timothy', password: 't1m0thy' }, function(error, result) {});
 
-* .logout([callback])
+* **user.logout([callback])**
 
-Log out the logged in user and redirect to the log in route.
+  Log out the logged in user and redirect to the log in route.
                 
-	user.logout(function(error, result) {});
+		user.logout(function(error, result) {});
 
 ### UserApp
 
-Exposes the full UserApp API with the [JavaScript library](https://app.userapp.io/#/docs/libs/javascript/).
+>Exposes the full UserApp API with the [JavaScript library](https://app.userapp.io/#/docs/libs/javascript/).
 
 ## Directives
 
-* ua-login
+* **ua-login**
 
-Add this to a form tag to attach it to the `user.login()` function.
+  Add this to a form tag to attach it to the `user.login()` function.
 
-	<form ua-login ua-error="error-msg">
-		<input name="login" placeholder="Username"><br>
-		<input name="password" placeholder="Password" type="password"><br>
-		<button type="submit">Log In</button>
-		<p id="error-msg"></p>
-	</form>
+		<form ua-login ua-error="error-msg">
+			<input name="login" placeholder="Username"><br>
+			<input name="password" placeholder="Password" type="password"><br>
+			<button type="submit">Log In</button>
+			<p id="error-msg"></p>
+		</form>
 
-* ua-logout
+* **ua-logout**
 
-Add this to a log out link to attach it to the `user.logout()` function.
+  Add this to a log out link to attach it to the `user.logout()` function.
 
-	<a href="#" ua-logout>Log Out</a>
+		<a href="#" ua-logout>Log Out</a>
 
-* ua-signup
+* **ua-signup**
 
-Add this to a form tag to attach it to the `user.signup()` function. Use `ua-error` to specify an error object. Use `ua-is-email` on the login input to specify that login is the same as email. All input fields must have a name that is matching the [user's properties](https://app.userapp.io/#/docs/user/#properties).
+  Add this to a form tag to attach it to the `user.signup()` function. Use `ua-error` to specify an error object. Use `ua-is-email` on the login input to specify that login is the same as email. All input fields must have a name that is matching the [user's properties](https://app.userapp.io/#/docs/user/#properties).
 
-	<form ua-signup ua-error="error-msg">
-		<input name="first_name" placeholder="Name"><br>
-		<input name="login" ua-is-email placeholder="Email"><br>
-		<input name="password" placeholder="Password" type="password"><br>
-		<button type="submit">Create Account</button>
-		<p id="error-msg"></p>
-	</form>
+		<form ua-signup ua-error="error-msg">
+			<input name="first_name" placeholder="Name"><br>
+			<input name="login" ua-is-email placeholder="Email"><br>
+			<input name="password" placeholder="Password" type="password"><br>
+			<button type="submit">Create Account</button>
+			<p id="error-msg"></p>
+		</form>
 
 ## Example
 
