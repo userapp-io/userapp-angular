@@ -73,6 +73,10 @@ Module with AngularJS services and directives that integrates [UserApp](https://
 
   Sets and gets the session token (stored in a cookie).
 
+* **user.current**
+
+  The logged in user. [See User documentation](https://app.userapp.io/#/docs/user/#properties) for more info.
+
 * **user.signup(user[, callback])**
 
   Sign up a user, log in, and redirect to default route.
@@ -125,6 +129,24 @@ Module with AngularJS services and directives that integrates [UserApp](https://
 			<button type="submit">Create Account</button>
 			<p id="error-msg"></p>
 		</form>
+
+## Events
+
+* **user.login**
+
+  Event triggered when user logs in
+	
+	$rootScope.$on('user.login', function() {
+		console.log(user.current);
+	});
+	
+* **user.logout**
+
+  Event triggered when user logs out
+	
+	$rootScope.$on('user.logout', function() {
+		console.log('Bye!');
+	});
 
 ## Example
 
