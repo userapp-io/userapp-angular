@@ -10,7 +10,7 @@ Module with AngularJS services and directives that integrates [UserApp](https://
 1. Include the UserApp JavaScript library and the AngularJS module into your app.
 
         <script src="https://app.userapp.io/js/userapp.client.js"></script>
-        <script src="https://raw.github.com/userapp-io/userapp-angular/master/angularjs.userapp.js"></script>
+        <script src="https://rawgithub.com/userapp-io/userapp-angular/master/angularjs.userapp.js"></script>
 
 2. Inject and initiate the service in your root scope using your [App Id](https://help.userapp.io/customer/portal/articles/1322336-how-do-i-find-my-app-id-):
 
@@ -25,12 +25,12 @@ Module with AngularJS services and directives that integrates [UserApp](https://
 
 4. Set `public` to `true` on the routes you want to make public. And set `login` to `true` on the login route:
 
-        $routeProvider.when('/login', {templateUrl: 'partials/login.html', protected: false, login: true});
-        $routeProvider.when('/signup', {templateUrl: 'partials/signup.html', protected: false});
+        $routeProvider.when('/login', {templateUrl: 'partials/login.html', public: true, login: true});
+        $routeProvider.when('/signup', {templateUrl: 'partials/signup.html', public: true});
 
 5. Add a log out link:
     
-        <a href="#/login" ua-logout>Log Out</a>
+        <a href="#" ua-logout>Log Out</a>
 
 6. Hide elements that should only be visible when logged in:
 
@@ -67,23 +67,60 @@ Sets and gets the App Id.
 
 * .token([value])
 
-Setes and gets the session token.
+Sets and gets the session token (stored in a cookie).
+
+* .signup(user[, callback])
+
+Sign up a user, log in, and redirect to default route.
+
+                user.signup({ login: 'timothy', email: 'timothy.johanssn@userapp.io', password: 't1m0thy' }, function(error, result) {});
 
 * .login(user[, callback])
 
+Log in a user and redirect to default route.
+
+                user.login({ login: 'timothy', password: 't1m0thy' }, function(error, result) {});
+
 * .logout([callback])
+
+Log out the logged in user and redirect to the log in route.
+                
+                user.logout(function(error, result) {});
 
 ### UserApp
 
-Exposes the UserApp API with the [JavaScript library](https://app.userapp.io/#/docs/libs/javascript/).
+Exposes the full UserApp API with the [JavaScript library](https://app.userapp.io/#/docs/libs/javascript/).
 
 ## Directives
 
 * ua-login
 
+Add this to a form tag to attach it to the `user.login()` function.
+
+                <form ua-login ua-error="error-msg">
+	                <input name="login" placeholder="Username"><br>
+	                <input name="password" placeholder="Password" type="password"><br>
+	                <button type="submit">Log In</button>
+	                <p id="error-msg"></p>
+                </form>
+
 * ua-logout
 
+Add this to a log out link to attach it to the `user.logout()` function.
+
+                <a href="#" ua-logout>Log Out</a>
+
 * ua-signup
+
+Add this to a form tag to attach it to the `user.signup()` function. Use `ua-error` to specify an error object. Use `ua-is-email` on the login input to specify that login is the same as email. All input fields must have a name that is matching the [user's properties](https://app.userapp.io/#/docs/user/#properties).
+
+                <form ua-signup ua-error="error-msg">
+                        <input name="first_name" placeholder="Name"><br>
+	                <input name="login" ua-is-email placeholder="Email"><br>
+	                <input name="password" placeholder="Password" type="password"><br>
+	                <button type="submit">Create Account</button>
+	                <p id="error-msg"></p>
+                </form>
 
 ## Example
 
