@@ -53,13 +53,13 @@ The main service with all session handling etc.
 
 Initiate the service with your [App Id](https://help.userapp.io/customer/portal/articles/1322336-how-do-i-find-my-app-id-).
 
-        user.init({ appId: 'YOUR_APP_ID' });
+	user.init({ appId: 'YOUR_APP_ID' });
 
 * .status()
 
 Returns the status of the session:
 
-        { authorized: false }
+	{ authorized: false }
 
 * .appId([value])
 
@@ -73,19 +73,19 @@ Sets and gets the session token (stored in a cookie).
 
 Sign up a user, log in, and redirect to default route.
 
-                user.signup({ login: 'timothy', email: 'timothy.johanssn@userapp.io', password: 't1m0thy' }, function(error, result) {});
+	user.signup({ login: 'timothy', email: 'timothy.johanssn@userapp.io', password: 't1m0thy' }, function(error, result) {});
 
 * .login(user[, callback])
 
 Log in a user and redirect to default route.
 
-                user.login({ login: 'timothy', password: 't1m0thy' }, function(error, result) {});
+	user.login({ login: 'timothy', password: 't1m0thy' }, function(error, result) {});
 
 * .logout([callback])
 
 Log out the logged in user and redirect to the log in route.
                 
-                user.logout(function(error, result) {});
+	user.logout(function(error, result) {});
 
 ### UserApp
 
@@ -97,30 +97,30 @@ Exposes the full UserApp API with the [JavaScript library](https://app.userapp.i
 
 Add this to a form tag to attach it to the `user.login()` function.
 
-                <form ua-login ua-error="error-msg">
-	                <input name="login" placeholder="Username"><br>
-	                <input name="password" placeholder="Password" type="password"><br>
-	                <button type="submit">Log In</button>
-	                <p id="error-msg"></p>
-                </form>
+	<form ua-login ua-error="error-msg">
+		<input name="login" placeholder="Username"><br>
+		<input name="password" placeholder="Password" type="password"><br>
+		<button type="submit">Log In</button>
+		<p id="error-msg"></p>
+	</form>
 
 * ua-logout
 
 Add this to a log out link to attach it to the `user.logout()` function.
 
-                <a href="#" ua-logout>Log Out</a>
+	<a href="#" ua-logout>Log Out</a>
 
 * ua-signup
 
 Add this to a form tag to attach it to the `user.signup()` function. Use `ua-error` to specify an error object. Use `ua-is-email` on the login input to specify that login is the same as email. All input fields must have a name that is matching the [user's properties](https://app.userapp.io/#/docs/user/#properties).
 
-                <form ua-signup ua-error="error-msg">
-                        <input name="first_name" placeholder="Name"><br>
-	                <input name="login" ua-is-email placeholder="Email"><br>
-	                <input name="password" placeholder="Password" type="password"><br>
-	                <button type="submit">Create Account</button>
-	                <p id="error-msg"></p>
-                </form>
+	<form ua-signup ua-error="error-msg">
+		<input name="first_name" placeholder="Name"><br>
+		<input name="login" ua-is-email placeholder="Email"><br>
+		<input name="password" placeholder="Password" type="password"><br>
+		<button type="submit">Create Account</button>
+		<p id="error-msg"></p>
+	</form>
 
 ## Example
 
