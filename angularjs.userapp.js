@@ -168,6 +168,44 @@ userappModule.factory('user', function($rootScope, $route, $location) {
             });
         },
 
+        // Check if the user has permission
+        hasPermission: function(permissions) {
+            if (!this.current.permissions || !permissions) {
+                return false;
+            }
+
+            if (typeof(permissions) != "object") {
+                permissions = [permissions];
+            }
+
+            for (var i = 0; i < permissions.length; ++i) {
+                if (!(this.current.permissions[permissions[i]] && this.current.permissions[permissions[i]].value === true)) {
+                    return false;
+                }
+            }
+
+            return true;
+        },
+
+        // Check if the user has features
+        hasFeature: function(features) {
+            if (!this.current.features || !features) {
+                return false;
+            }
+
+            if (typeof(features) != "object") {
+                features = [features];
+            }
+
+            for (var i = 0; i < features.length; ++i) {
+                if (!(this.current.features[features[i]] && this.current.features[features[i]].value === true)) {
+                    return false;
+                }
+            }
+
+            return true;
+        },
+
         // Load the logged in user
         loadUser: function(callback) {
             var that = this;
@@ -268,6 +306,51 @@ userappModule.directive('uaSignup', function(user, UserApp) {
 	};
 });
 
+// hasPermission directive
+userappModule.directive('uaHasPermission', function(user) {
+    return {
+        restrict: 'A',
+        link: function(scope, element, attrs) {
+            element[0].style.display = 'none';
+
+            scope.user = user.current;
+            var permissions = attrs.uaHasPermission.split(' ');
+
+            if (permissions) {
+                scope.$watch('user', function() {
+                    if (user.hasPermission(permissions)) {
+                        element[0].style.display = null;
+                    } else {
+                        element[0].style.display = 'none';
+                    }
+                }, true);
+            }
+        }
+    };
+});
+
+// hasFeature directive
+userappModule.directive('uaHasFeature', function(user) {
+    return {
+        restrict: 'A',
+        link: function(scope, element, attrs) {
+            element[0].style.display = 'none';
+
+            scope.user = user.current;
+            var features = attrs.uaHasFeature.split(' ');
+
+            if (features) {
+                scope.$watch('user', function() {
+                    if (user.hasFeature(features)) {
+                        element[0].style.display = null;
+                    } else {
+                        element[0].style.display = 'none';
+                    }
+                }, true);
+            }
+        }
+    };
+});
 
 
 // Kaka - The Embeddable Cookie Library

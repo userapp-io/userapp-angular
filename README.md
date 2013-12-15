@@ -95,6 +95,20 @@ Module with AngularJS services and directives that integrates [UserApp](https://
                 
 		user.logout(function(error, result) {});
 
+* **user.hasPermission(permissions)**
+
+  Returns `true` if the user has all the permissions in the string or array `permissions`. Else it returns `false`.
+                
+		var result = user.hasPermission('edit');
+		var result = user.hasPermission(['edit', 'post']);
+
+* **user.hasFeature(features)**
+
+  Returns `true` if the user has all the features in the string or array `features`. Else it returns `false`.
+                
+		var result = user.hasFeature('editor');
+		var result = user.hasFeature(['editor', 'another_feature']);
+
 ### UserApp
 
 >Exposes the full UserApp API with the [JavaScript library](https://app.userapp.io/#/docs/libs/javascript/).
@@ -129,6 +143,18 @@ Module with AngularJS services and directives that integrates [UserApp](https://
 			<button type="submit">Create Account</button>
 			<p id="error-msg"></p>
 		</form>
+
+* **ua-has-permission="permissions"**
+
+  Add this to an element to attach it to the `user.hasPermission()` function. The element will be hidden if not all permissions are true. Multiple permissions are separated with whitespace.
+
+		<a href="#" ua-has-permission="edit">Edit Post</a>
+
+* **ua-has-feature="features"**
+
+  Add this to an element to attach it to the `user.hasFeature()` function. The element will be hidden if not all features are true. Multiple features are separated with whitespace.
+
+		<a href="#" ua-has-feature="fancy_feature">Go to Fancy Feature...</a>
 
 ## Events
 
