@@ -1,11 +1,15 @@
 UserApp AngularJS
 =================
 
-Module with AngularJS services and directives that integrates [UserApp](https://www.userapp.io/) seamlessly with your app.
+AngularJS module that adds user authentication to your app with [UserApp](https://www.userapp.io/). It supports protected/public routes, rerouting on login/logout, heartbeats for status checks, stores the session token in a cookie, directives for signup/login/logout, etc.
 
 *UserApp is a cloud-based user management API for web apps with the purpose to relieve developers from having to program logic for user authentication, sign-up, invoicing, feature/property/permission management, and more.*
 
 ## Getting Started
+
+Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-en-v2b3k)
+
+*or*
 
 1. Include the [UserApp JavaScript library](https://app.userapp.io/#/docs/libs/javascript/) and this AngularJS module in your index.html.
 
@@ -176,7 +180,7 @@ Module with AngularJS services and directives that integrates [UserApp](https://
 
 ## Example
 
-See example/ for a demo app based on [angular-seed](https://github.com/angular/angular-seed).
+See [example/](https://github.com/userapp-io/userapp-angular/tree/master/example) for a demo app based on [angular-seed](https://github.com/angular/angular-seed).
 
 ## Help
 
