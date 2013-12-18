@@ -40,6 +40,8 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
     
         <a href="#" ua-logout>Log Out</a>
 
+  (End the session and redirects to the login route)
+
 6. Hide elements that should only be visible when logged in:
 
         <div ng-show="user.authorized">Welcome!</div>
