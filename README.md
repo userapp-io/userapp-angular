@@ -123,7 +123,7 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
 
 * **ua-login**
 
-  Add this to a form tag to attach it to the `user.login()` function. Use `ua-error` to specify an error object.
+  Add this to a form tag to attach it to the `user.login()` function. Use `ua-error` to specify an error element.
 
 		<form ua-login ua-error="error-msg">
 			<input name="login" placeholder="Username"><br>
@@ -140,7 +140,7 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
 
 * **ua-signup**
 
-  Add this to a form tag to attach it to the `user.signup()` function. Use `ua-error` to specify an error object. Use `ua-is-email` on the login input to specify that login is the same as email. All input field names must reflect the [user's properties](https://app.userapp.io/#/docs/user/#properties).
+  Add this to a form tag to attach it to the `user.signup()` function. Use `ua-error` to specify an error element. Use `ua-is-email` on the login input to specify that login is the same as email. All input field names must reflect the [user's properties](https://app.userapp.io/#/docs/user/#properties).
 
 		<form ua-signup ua-error="error-msg">
 			<input name="first_name" placeholder="Name"><br>
@@ -152,7 +152,7 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
 
 * **ua-oauth-link**
 
-  Add this to a link tag in order to authenticate using an OAuth provider. The value should be an OAuth provider id such as `google`, `github`, `facebook` or `linkedin`. *Additionally:* Use `ua-error` to specify an error object. Use `ua-oauth-scopes` to specify OAuth scopes to request by provider. The scopes must be a comma-separated list of scopes, i.e. `user,user:email`. Use `ua-oauth-redirect-uri` to explicitly specify the URI to be redirected to after provider has performed authentication. If not specified, the default URI will be `/#/oauth/callback/`.
+  Add this to a link tag in order to authenticate using an OAuth provider. The value should be an OAuth provider id such as `google`, `github`, `facebook` or `linkedin`. *Additionally:* Use `ua-error` to specify an error element. Use `ua-oauth-scopes` to specify OAuth scopes to request by provider. The scopes must be a comma-separated list of scopes, i.e. `user,user:email`. Use `ua-oauth-redirect-uri` to explicitly specify the URI to be redirected to after provider has performed authentication. If not specified, the default URI will be `/#/oauth/callback/`.
 
 		<a href="" ua-oauth-link="google">Log in with Google</a>
 
