@@ -172,9 +172,17 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
 
 ## Events
 
+* **user.error**
+
+  Event triggered when an error occurs.
+	
+		$rootScope.$on('user.error', function(sender, error) {
+			console.log(error.message);
+		});
+
 * **user.login**
 
-  Event triggered when user logs in
+  Event triggered when user logs in.
 	
 		$rootScope.$on('user.login', function() {
 			console.log(user.current);
@@ -182,7 +190,7 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
 	
 * **user.logout**
 
-  Event triggered when user logs out
+  Event triggered when user logs out.
 	
 		$rootScope.$on('user.logout', function() {
 			console.log('Bye!');
