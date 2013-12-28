@@ -156,6 +156,8 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
 
 		<a href="" ua-oauth-link="google">Log in with Google</a>
 
+  [Read more about how to use OAuth/*Social Login* with UserApp.](https://app.userapp.io/#/docs/concepts/#social-login)
+
 * **ua-has-permission="permissions"**
 
   Add this to an element to attach it to the `user.hasPermission()` function. The element will be hidden if not all permissions are true. Multiple permissions are separated with whitespace.
