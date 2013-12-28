@@ -40,8 +40,13 @@ userappModule.factory('user', function($rootScope, $route, $location) {
 			// App Id
     		this.appId(config.appId);
 
-    		// Check if there already is a session (cookie)
-    		token && this.activate(token);
+            // If a UserApp token is present, use that for authentication
+            var remoteToken;
+            if (!token && (remoteToken = $location.search().ua_token)) {
+                token = remoteToken;
+            }
+
+            token && this.activate(token);
 
 			// Listen for route changes
 			$rootScope.$on('$routeChangeSuccess', function(ev, data) {
@@ -94,6 +99,7 @@ userappModule.factory('user', function($rootScope, $route, $location) {
         token: function(value) {
             if (value) {
                 token = value;
+
                 UserApp.setToken(token);
                 status.authorized = true;
                 $rootScope.user.authorized = true;
@@ -275,24 +281,24 @@ userappModule.directive('uaLogin', function(user) {
 
 // Signup directive
 userappModule.directive('uaSignup', function(user, UserApp) {
-	return {
-		restrict: 'A',
-		link: function(scope, element, attrs) {
-			element.on('submit', function(e) {
-				e.preventDefault();
+    return {
+        restrict: 'A',
+        link: function(scope, element, attrs) {
+            element.on('submit', function(e) {
+                e.preventDefault();
 
-				// Create the sign up object
-				var object = {};
-				for (var i = 0; i < this.elements.length; ++i) {
-					if (this.elements[i].name) {
-						object[this.elements[i].name] = this.elements[i].value;
+                // Create the sign up object
+                var object = {};
+                for (var i = 0; i < this.elements.length; ++i) {
+                    if (this.elements[i].name) {
+                        object[this.elements[i].name] = this.elements[i].value;
 
-						if (angular.element(this.elements[i]).attr("ua-is-email") != undefined) {
-							object["email"] = this.elements[i].value;
-						}
-					}
-				}
-				
+                        if (angular.element(this.elements[i]).attr("ua-is-email") != undefined) {
+                            object["email"] = this.elements[i].value;
+                        }
+                    }
+                }
+                
                 // Sign up
                 user.signup(object, function(error, result) {
                     if (error && attrs.uaError) {
@@ -300,10 +306,39 @@ userappModule.directive('uaSignup', function(user, UserApp) {
                     }
                 });
 
-				return false;
-			});
-		}
-	};
+                return false;
+            });
+        }
+    };
+});
+
+// OAuth URL directive
+userappModule.directive('uaOauthLink', function(UserApp) {
+    return {
+        restrict: 'A',
+        link: function(scope, element, attrs) {
+            element.on('click', function(e) {
+                e.preventDefault();
+
+                var providerId = attrs.uaOauthLink;
+                var scopes = 'uaOauthScopes' in attrs ? (attrs.uaOauthScopes || "").split(',') : null;
+                var defaultRedirectUrl = window.location.protocol+"//"+window.location.host+window.location.pathname+"#/oauth/callback/";
+                var redirectUri = 'uaOauthRedirectUri' in attrs ? attrs.uaOauthRedirectUri : defaultRedirectUrl;
+
+                UserApp.OAuth.getAuthorizationUrl({ provider_id: providerId, redirect_uri: redirectUri, scopes: scopes }, function(error, result){
+                    if (error) {
+                        if(attrs.uaError){
+                            angular.element(document.getElementById(attrs.uaError)).text(error.message);
+                        } 
+                    }else{
+                        window.location.href = result.authorization_url;
+                    }
+                });
+
+                return false;
+            });
+        }
+    };
 });
 
 // hasPermission directive

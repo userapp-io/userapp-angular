@@ -150,6 +150,12 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
 			<p id="error-msg"></p>
 		</form>
 
+* **ua-oauth-link**
+
+  Add this to a link tag in order to authenticate using an OAuth provider. The value should be an OAuth provider id such as `google`, `github`, `facebook` or `linkedin`. *Additionally:* Use `ua-error` to specify an error object. Use `ua-oauth-scopes` to specify OAuth scopes to request by provider. The scopes must be a comma-separated list of scopes, i.e. `user,user:email`. Use `ua-oauth-redirect-uri` to explicitly specify the URI to be redirected to after provider has performed authentication. If not specified, the default URI will be `/#/oauth/callback/`.
+
+		<a href="" ua-oauth-link="google">Log in with Google</a>
+
 * **ua-has-permission="permissions"**
 
   Add this to an element to attach it to the `user.hasPermission()` function. The element will be hidden if not all permissions are true. Multiple permissions are separated with whitespace.
