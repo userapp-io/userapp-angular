@@ -11,23 +11,27 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
 
 *or*
 
-1. Include the [UserApp JavaScript library](https://app.userapp.io/#/docs/libs/javascript/) and this AngularJS module in your index.html.
+1. Include the [UserApp JavaScript library](https://app.userapp.io/#/docs/libs/javascript/) and this AngularJS module in your *index.html*:
 
         <script src="https://app.userapp.io/js/userapp.client.js"></script>
         <script src="https://rawgithub.com/userapp-io/userapp-angular/master/angularjs.userapp.js"></script>
 
-2. Inject and initiate the service in your root scope with your [App Id](https://help.userapp.io/customer/portal/articles/1322336-how-do-i-find-my-app-id-):
+2. Add the `UserApp` module to your app's dependencies (*app.js*):
 
-        .run(function($rootScope, user) {
+        var app = angular.module('myApp', ['UserApp']);
+
+3. Inject and initiate the service in your root scope (*app.js*) with your [App Id](https://help.userapp.io/customer/portal/articles/1322336-how-do-i-find-my-app-id-):
+
+        app.run(function($rootScope, user) {
             user.init({ appId: 'YOUR_APP_ID' });
         });
 
-3. Create routes + templates for login and signup, and use the directives to connect them to UserApp (examples: [login.html](https://github.com/userapp-io/userapp-angular/blob/master/example/partials/login.html) and [signup.html](https://github.com/userapp-io/userapp-angular/blob/master/example/partials/signup.html)):
+4. Create routes + templates for login and signup, and use the directives to connect them to UserApp (examples: [login.html](https://github.com/userapp-io/userapp-angular/blob/master/example/partials/login.html) and [signup.html](https://github.com/userapp-io/userapp-angular/blob/master/example/partials/signup.html)):
 
         $routeProvider.when('/login', {templateUrl: 'partials/login.html'});
         $routeProvider.when('/signup', {templateUrl: 'partials/signup.html'});
 
-4. Set `public` to `true` on the routes you want to make public. And set `login` to `true` on the login route:
+5. Set `public` to `true` on the routes you want to make public. And set `login` to `true` on the login route:
 
         $routeProvider.when('/login', {templateUrl: 'partials/login.html', public: true, login: true});
         $routeProvider.when('/signup', {templateUrl: 'partials/signup.html', public: true});
@@ -36,21 +40,21 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
 	
 		$routeProvider.otherwise({redirectTo: '/home'});
 
-5. Add a log out link:
+6. Add a log out link:
     
         <a href="#" ua-logout>Log Out</a>
 
   (End the session and redirects to the login route)
 
-6. Hide elements that should only be visible when logged in:
+7. Hide elements that should only be visible when logged in:
 
         <div ng-show="user.authorized">Welcome!</div>
 
-7. Use the `user` object to access properties on the logged in user:
+8. Use the `user` object to access properties on the logged in user:
 
         <div ng-show="user.authorized">Welcome {{ user.first_name }}!</div>
 
-8. Read this documention and the [UserApp Documentation](https://app.userapp.io/#/docs/) to learn how to use the full API!
+9. Read this documention and the [UserApp Documentation](https://app.userapp.io/#/docs/) to learn how to use the full API!
 
 
 ## Services
