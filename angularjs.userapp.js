@@ -9,19 +9,31 @@
     userappModule.value('UserApp', UserApp);
 
     // Directive error handler
-    var handleError = function(scope, error, elementId){
-        if(!error){
+    var handleError = function(scope, error, elementId) {
+        if (!error) {
             return;
         }
         
         error.handled = false;
 
-        if(elementId){
+        if (elementId) {
             error.handled = true;
             angular.element(document.getElementById(elementId)).text(error.message);
         }
 
         scope.$emit('user.error', error);
+    };
+
+    // Safe scope apply
+    var safeApply = function(scope, fn) {
+        var phase = scope.$root.$$phase;
+        if (phase == '$apply' || phase == '$digest') {
+            if (fn && (typeof (fn) === 'function')) {
+                fn();
+            }
+        } else {
+            scope.$apply(fn);
+        }
     };
 
     // Authentication service
@@ -47,7 +59,7 @@
         }
 
         // The service
-        return {
+        var service = {
         	// Initialize the service
         	init: function(config) {
         		// Initialize UserApp
@@ -68,9 +80,10 @@
     			$rootScope.$on('$routeChangeSuccess', function(ev, data) {
     				// Check if this route is protected
     				if (data.$$route && data.$$route.public !== true && status.authorized == false) {
-    					// redirect to login route
-    		            $location.path(loginRoute);
-    		            if (!$rootScope.$$phase) $rootScope.$apply();
+                        safeApply($rootScope, function() {
+                            // redirect to login route
+                            $location.path(loginRoute);
+                        });
     				}
     			});
         	},
@@ -97,11 +110,11 @@
                     delete user[key];
                 }
 
-                // redirect to login route
-                $location.path(loginRoute);
-
-                if (!$rootScope.$$phase){
-                    $rootScope.$apply();
+                if ($route.current.$$route.public !== true) {
+                    safeApply($rootScope, function() {
+                        // redirect to login route
+                        $location.path(loginRoute);
+                    });
                 }
             },
 
@@ -136,11 +149,13 @@
                 this.token(token);
                 this.startHeartbeat();
 
-                if ($route.current && loginRoute) {
-    	            if ($route.current.$$route.originalPath == loginRoute) {
-    	            	// redirect to default route
-    	            	$location.path(defaultRoute);
-    	            }
+                //if ($route.current && loginRoute) {
+    	        //    if ($route.current.$$route.originalPath == loginRoute) {
+                if ($route.current && $route.current.$$route.public) {
+                    safeApply($rootScope, function() {
+                        // redirect to default route
+                        $location.path(defaultRoute);
+                    });
     	        }
 
                 // Load the logged in user
@@ -153,7 +168,8 @@
             // Sign up a new user and logs in
             signup: function(user, callback) {
                 var that = this;
-                
+                this.reset();
+
                 UserApp.User.save(user, function(error, result) {
                     if (!error) {
                         // Success - Log in the user
@@ -196,11 +212,11 @@
 
             // Check if the user has permission
             hasPermission: function(permissions) {
-                if (!this.current.permissions || !permissions) {
+                if (!this.current || !this.current.permissions || !permissions) {
                     return false;
                 }
 
-                if (typeof(permissions) != "object") {
+                if (typeof(permissions) != 'object') {
                     permissions = [permissions];
                 }
 
@@ -215,11 +231,11 @@
 
             // Check if the user has features
             hasFeature: function(features) {
-                if (!this.current.features || !features) {
+                if (!this.current || !this.current.features || !features) {
                     return false;
                 }
 
-                if (typeof(features) != "object") {
+                if (typeof(features) != 'object') {
                     features = [features];
                 }
 
@@ -238,10 +254,9 @@
 
                 UserApp.User.get({ user_id: 'self' }, function(error, result) {
                     if (!error) {
-                        angular.extend(user, result[0]);
-                        if (!$rootScope.$$phase) {
-                            $rootScope.$apply();
-                        }
+                        safeApply($rootScope, function() {
+                            angular.extend(user, result[0]);
+                        });
                     }
 
                     callback && callback(error, result);
@@ -265,6 +280,18 @@
                 }, interval || 20000);
             }
     	};
+
+        // Extend the current user with hasPermission() and hasFeature()
+        angular.extend(user, { 
+            hasPermission: function(permissions) {
+                return service.hasPermission(permissions);
+            }, 
+            hasFeature: function(features) {
+                return service.hasFeature(features);
+            }
+        });
+
+        return service;
     });
 
     // Logout directive
@@ -315,8 +342,8 @@
                         if (this.elements[i].name) {
                             object[this.elements[i].name] = this.elements[i].value;
 
-                            if (angular.element(this.elements[i]).attr("ua-is-email") != undefined) {
-                                object["email"] = this.elements[i].value;
+                            if (angular.element(this.elements[i]).attr('ua-is-email') != undefined) {
+                                object['email'] = this.elements[i].value;
                             }
                         }
                     }
@@ -345,10 +372,10 @@
                     e.preventDefault();
 
                     var providerId = attrs.uaOauthLink;
-                    var scopes = 'uaOauthScopes' in attrs ? (attrs.uaOauthScopes || "").split(',') : null;
-                    var defaultRedirectUrl = window.location.protocol+"//"+window.location.host+window.location.pathname+"#/oauth/callback/";
+                    var scopes = 'uaOauthScopes' in attrs ? (attrs.uaOauthScopes || '').split(',') : null;
+                    var defaultRedirectUrl = window.location.protocol+'//'+window.location.host+window.location.pathname+'#/oauth/callback/';
                     var redirectUri = 'uaOauthRedirectUri' in attrs ? attrs.uaOauthRedirectUri : defaultRedirectUrl;
-
+                    
                     UserApp.OAuth.getAuthorizationUrl({ provider_id: providerId, redirect_uri: redirectUri, scopes: scopes }, function(error, result){
                         if (error) {
                             return handleError(scope, error, attrs.uaError);
