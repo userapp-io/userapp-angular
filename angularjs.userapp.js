@@ -110,7 +110,7 @@
                     delete user[key];
                 }
 
-                if ($route.current.$$route.public !== true) {
+                if ($route.current && $route.current.$$route.public !== true) {
                     safeApply($rootScope, function() {
                         // redirect to login route
                         $location.path(loginRoute);
@@ -256,10 +256,11 @@
                     if (!error) {
                         safeApply($rootScope, function() {
                             angular.extend(user, result[0]);
+                            callback && callback(error, result);
                         });
+                    } else {
+                        callback && callback(error, result);
                     }
-
-                    callback && callback(error, result);
                 });
             },
 
