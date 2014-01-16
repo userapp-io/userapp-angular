@@ -31,6 +31,8 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
         $routeProvider.when('/login', {templateUrl: 'partials/login.html'});
         $routeProvider.when('/signup', {templateUrl: 'partials/signup.html'});
 
+  **Note:** If you are using [ui-router](https://github.com/angular-ui/ui-router), all you have to do is to create states instead of the routes above.
+
 5. Set `public` to `true` on the routes you want to make public. And set `login` to `true` on the login route:
 
         $routeProvider.when('/login', {templateUrl: 'partials/login.html', public: true, login: true});
@@ -39,6 +41,8 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
   The `.otherwise()` route should be set to where you want your users to be redirected after login. Example:
 	
 		$routeProvider.otherwise({redirectTo: '/home'});
+
+  **Note:** If you are using [ui-router](https://github.com/angular-ui/ui-router), place the `public` and `login` flags inside `data` instead.
 
 6. Add a log out link:
     

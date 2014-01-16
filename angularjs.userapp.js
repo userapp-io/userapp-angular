@@ -37,31 +37,81 @@
     };
 
     // Authentication service
-    userappModule.factory('user', function($rootScope, $route, $location) {
+    userappModule.factory('user', function($rootScope, $location, $injector, $log) {
     	var user = {};
     	var appId = null;
         var token = Kaka.get('ua_session_token');
         var status = { authorized: false };
         var heartBeatInterval = -1;
-        var defaultRoute = $route.routes.null.redirectTo;
+        var defaultRoute = null;
         var loginRoute = null;
+        var states = {};
+
+        // Check if either ng-route or ui-router is present
+        var $route = $injector.has('$route') ? $injector.get('$route') : null;
+        var $state = $injector.has('$state') ? $injector.get('$state') : null;
+        
+        if ($state && !$state.transitionTo) {
+            // This is not the correct $state service
+            $state = null;
+        }
+        
+        if (!$state && !$route) {
+            $log.warn('The UserApp module needs either ng-route or ui-router to work as expected.');
+        }
+
+        if ($state) {
+            // Get the list of all states
+            var stateList = $state.get();
+            for (var i = 0; i < stateList.length; ++i) {
+                states[stateList[i].name] = stateList[i];
+            }
+        }
+
+        var transitionTo = function(state, useLocation) {
+            if ($state) {
+                if (useLocation) {
+                    $location.path(states[state].url);
+                } else {
+                    $state.transitionTo(state);
+                }
+            } else if ($route) {
+                $location.path(state);
+            }
+        };
 
         // Expose the user object to HTML templates via the root scope
         $rootScope.user = user;
         $rootScope.user.authorized = false;
 
-        // Find the login route
-        for (var route in $route.routes) {
-        	if ($route.routes[route].login) {
-        		loginRoute = $route.routes[route].originalPath;
-        		break;
-        	}
-        }
-
         // The service
         var service = {
         	// Initialize the service
         	init: function(config) {
+                if ($state) {
+                    // Set the default state
+                    defaultRoute = '';
+
+                    // Find the login state
+                    for (var state in states) {
+                        if (states[state].data && states[state].data.login) {
+                            loginRoute = state;
+                            break;
+                        }
+                    }
+                } else if ($route) {
+                    // Find the default route
+                    defaultRoute = ($route.routes.null || { redirectTo: '' }).redirectTo;
+
+                    // Find the login route
+                    for (var route in $route.routes) {
+                        if ($route.routes[route].login) {
+                            loginRoute = $route.routes[route].originalPath;
+                            break;
+                        }
+                    }
+                }
+
         		// Initialize UserApp
     			UserApp.initialize({});
 
@@ -77,15 +127,29 @@
                 token && this.activate(token);
 
     			// Listen for route changes
-    			$rootScope.$on('$routeChangeSuccess', function(ev, data) {
-    				// Check if this route is protected
-    				if (data.$$route && data.$$route.public !== true && status.authorized == false) {
-                        safeApply($rootScope, function() {
-                            // redirect to login route
-                            $location.path(loginRoute);
-                        });
-    				}
-    			});
+                if ($state) {
+                    $rootScope.$on('$stateChangeStart', function(ev, toState) {
+                        // Check if this state is protected
+                        if ((!toState.data || (toState.data && toState.data.public !== true)) && status.authorized == false) {
+                            ev.preventDefault();
+                            safeApply($rootScope, function() {
+                                // Redirect to login route
+                                transitionTo(loginRoute);
+                            });
+                        }
+                    });
+                } else if ($route) {
+        			$rootScope.$on('$routeChangeStart', function(ev, data) {
+        				// Check if this route is protected
+        				if (data.$$route && data.$$route.public !== true && status.authorized == false) {
+                            ev.preventDefault();
+                            safeApply($rootScope, function() {
+                                // Redirect to login route
+                                transitionTo(loginRoute);
+                            });
+        				}
+        			});
+                }
         	},
 
     		// The logged in user
@@ -110,11 +174,19 @@
                     delete user[key];
                 }
 
-                if ($route.current && $route.current.$$route.public !== true) {
-                    safeApply($rootScope, function() {
-                        // redirect to login route
-                        $location.path(loginRoute);
-                    });
+                // Redirect to login route
+                if ($state) {
+                    if ($state.$current && (!$state.$current.data || ($state.$current.data && $state.$current.data.public !== true))) {
+                        safeApply($rootScope, function() {
+                            transitionTo(loginRoute, true);
+                        });
+                    }
+                } else if ($route) {
+                    if ($route.current && $route.current.$$route.public !== true) {
+                        safeApply($rootScope, function() {
+                            transitionTo(loginRoute);
+                        });
+                    }
                 }
             },
 
@@ -149,14 +221,20 @@
                 this.token(token);
                 this.startHeartbeat();
 
-                //if ($route.current && loginRoute) {
-    	        //    if ($route.current.$$route.originalPath == loginRoute) {
-                if ($route.current && $route.current.$$route.public) {
-                    safeApply($rootScope, function() {
-                        // redirect to default route
-                        $location.path(defaultRoute);
-                    });
-    	        }
+                // Redirect to default route
+                if ($state) {
+                    if ($state.$current && $state.$current.data && $state.$current.data.public) {
+                        safeApply($rootScope, function() {
+                            transitionTo(defaultRoute, true);
+                        });
+                    }
+                } else if ($route) {
+                    if ($route.current && $route.current.$$route.public) {
+                        safeApply($rootScope, function() {
+                            transitionTo(defaultRoute);
+                        });
+        	        }
+                }
 
                 // Load the logged in user
                 this.loadUser(function(error, result) {
@@ -200,14 +278,12 @@
             logout: function(callback) {
                 var that = this;
 
-                UserApp.User.logout(function(error) {
-                    if (!error) {
-                        that.reset();
-                        $rootScope.$broadcast('user.logout');
-                    }
+                UserApp.User.logout(function(error) {});
 
-                    callback && callback(error);
-                });
+                that.reset();
+                $rootScope.$broadcast('user.logout');
+
+                callback && callback(error);
             },
 
             // Check if the user has permission
@@ -300,11 +376,13 @@
     	return {
     		restrict: 'A',
     		link: function(scope, element, attrs) {
-    			element.on('click', function(e) {
-    				e.preventDefault();
-    				user.logout();
-    				return false;
-    			});
+                var evHandler = function(e) {
+                    e.preventDefault();
+                    user.logout();
+                    return false;
+                };
+
+    			element.on ? element.on('click', evHandler) : element.bind('click', evHandler);
     		}
     	};
     });
@@ -314,17 +392,19 @@
     	return {
     		restrict: 'A',
     		link: function(scope, element, attrs) {
-    			element.on('submit', function(e) {
-    				e.preventDefault();
+                var evHandler = function(e) {
+                    e.preventDefault();
 
-    				user.login({ login: this.login.value, password: this.password.value }, function(error, result) {
-    					if (error) {
+                    user.login({ login: this.login.value, password: this.password.value }, function(error, result) {
+                        if (error) {
                             return handleError(scope, error, attrs.uaError);
-    					}
-    				});
+                        }
+                    });
 
-    				return false;
-    			});
+                    return false;
+                };
+
+    			element.on ? element.on('submit', evHandler) : element.bind('submit', evHandler);
     		}
     	};
     });
@@ -334,7 +414,7 @@
         return {
             restrict: 'A',
             link: function(scope, element, attrs) {
-                element.on('submit', function(e) {
+                var evHandler = function(e) {
                     e.preventDefault();
 
                     // Create the sign up object
@@ -359,7 +439,9 @@
                     });
 
                     return false;
-                });
+                };
+
+                element.on ? element.on('submit', evHandler) : element.bind('submit', evHandler);
             }
         };
     });
@@ -369,7 +451,7 @@
         return {
             restrict: 'A',
             link: function(scope, element, attrs) {
-                element.on('click', function(e) {
+                var evHandler = function(e) {
                     e.preventDefault();
 
                     var providerId = attrs.uaOauthLink;
@@ -386,7 +468,9 @@
                     });
 
                     return false;
-                });
+                };
+
+                element.on ? element.on('click', evHandler) : element.bind('click', evHandler);
             }
         };
     });
