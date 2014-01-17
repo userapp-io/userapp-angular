@@ -48,9 +48,14 @@
         var states = {};
 
         // Check if either ng-route or ui-router is present
-        var $route = $injector.has('$route') ? $injector.get('$route') : null;
-        var $state = $injector.has('$state') ? $injector.get('$state') : null;
-        
+        if ($injector.has) {
+            var $route = $injector.has('$route') ? $injector.get('$route') : null;
+            var $state = $injector.has('$state') ? $injector.get('$state') : null;
+        } else {
+            var $route = $injector.get('$route');
+            var $state = null;
+        }
+
         if ($state && !$state.transitionTo) {
             // This is not the correct $state service
             $state = null;
