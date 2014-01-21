@@ -16,6 +16,8 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
         <script src="https://app.userapp.io/js/userapp.client.js"></script>
         <script src="https://rawgithub.com/userapp-io/userapp-angular/master/angularjs.userapp.js"></script>
 
+  (You can also install the module with bower: `$ bower install userapp-angular`)
+
 2. Add the `UserApp` module to your app's dependencies (*app.js*):
 
         var app = angular.module('myApp', ['UserApp']);
