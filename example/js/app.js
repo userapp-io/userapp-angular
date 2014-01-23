@@ -18,6 +18,7 @@ config(['$routeProvider', function($routeProvider) {
 	$routeProvider.otherwise({redirectTo: '/view1'});
 }])
 .run(function($rootScope, user) {
-	// Initiate the user service with a UserApp App Id
-	user.init({ appId: 'YOUR_APP_ID' });
+	// Initiate the user service with your UserApp App Id
+	// https://help.userapp.io/customer/portal/articles/1322336-how-do-i-find-my-app-id-
+	user.init({ appId: 'YOUR-USERAPP-APP-ID' });
 });
