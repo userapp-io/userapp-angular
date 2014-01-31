@@ -169,6 +169,7 @@
             reset: function() {
             	clearInterval(heartBeatInterval);
 
+            	UserApp.setToken(null);
                 token = null;
                 status.authorized = false;
 
