@@ -38,8 +38,8 @@
 
     // Authentication service
     userappModule.factory('user', function($rootScope, $location, $injector, $log) {
-    	var user = {};
-    	var appId = null;
+        var user = {};
+        var appId = null;
         var token = Kaka.get('ua_session_token');
         var status = { authorized: false };
         var heartBeatInterval = -1;
@@ -56,7 +56,7 @@
             var $state = null;
         }
 
-        if ($state && !$state.transitionTo) {
+        if ($state && (!$state.transitionTo || !$state.get)) {
             // This is not the correct $state service
             $state = null;
         }
@@ -91,8 +91,10 @@
 
         // The service
         var service = {
-        	// Initialize the service
-        	init: function(config) {
+            // Initialize the service
+            init: function(config) {
+                var that = this;
+
                 if ($state) {
                     // Set the default state
                     defaultRoute = '';
@@ -117,11 +119,11 @@
                     }
                 }
 
-        		// Initialize UserApp
-    			UserApp.initialize({});
+                // Initialize UserApp
+                UserApp.initialize({});
 
-    			// App Id
-        		this.appId(config.appId);
+                // App Id
+                this.appId(config.appId);
 
                 // If a UserApp token is present, use that for authentication
                 var remoteToken;
@@ -131,7 +133,7 @@
 
                 token && this.activate(token);
 
-    			// Listen for route changes
+                // Listen for route changes
                 if ($state) {
                     $rootScope.$on('$stateChangeStart', function(ev, toState) {
                         // Check if this state is protected
@@ -141,40 +143,52 @@
                                 // Redirect to login route
                                 transitionTo(loginRoute);
                             });
+                        } else if ((!toState.data || (toState.data && toState.data.hasPermission)) && that.current.permissions) {
+                            if (!that.hasPermission(toState.data.hasPermission)) { 
+                                safeApply($rootScope, function() {
+                                    transitionTo(defaultRoute, true);
+                                });
+                            }
                         }
                     });
                 } else if ($route) {
-        			$rootScope.$on('$routeChangeStart', function(ev, data) {
-        				// Check if this route is protected
-        				if (data.$$route && data.$$route.public !== true && status.authorized == false) {
+                    $rootScope.$on('$routeChangeStart', function(ev, data) {
+                        // Check if this route is protected
+                        if (data.$$route && data.$$route.public !== true && status.authorized == false) {
                             ev.preventDefault();
                             safeApply($rootScope, function() {
                                 // Redirect to login route
                                 transitionTo(loginRoute);
                             });
-        				}
-        			});
+                        } else if (data.$$route && data.$$route.hasPermission && that.current.permissions) {
+                            if (!that.hasPermission(data.$$route.hasPermission)) { 
+                                safeApply($rootScope, function() {
+                                    transitionTo(defaultRoute);
+                                });
+                            }
+                        }
+                    });
                 }
-        	},
+            },
 
-    		// The logged in user
-    		current: user,
+            // The logged in user
+            current: user,
 
-    		// Status of current session
+            // Status of current session
             status: function() {
                 return status;
             },
 
             // Reset session
             reset: function() {
-            	clearInterval(heartBeatInterval);
+                clearInterval(heartBeatInterval);
 
-            	UserApp.setToken(null);
+                UserApp.setToken(null);
                 token = null;
                 status.authorized = false;
 
                 // Remove session cookie
-    			Kaka.remove('ua_session_token');
+                Kaka.remove('ua_session_token');
 
                 for (var key in user) {
                     delete user[key];
@@ -224,6 +238,7 @@
 
             // Activate the session (set token, load user, start heartbeat, trigger event)
             activate: function(token, callback) {
+                var that = this;
                 this.token(token);
                 this.startHeartbeat();
 
@@ -239,15 +254,34 @@
                         safeApply($rootScope, function() {
                             transitionTo(defaultRoute);
                         });
-        	        }
+                    }
                 }
 
                 // Load the logged in user
                 this.loadUser(function(error, result) {
                     callback && callback(error, result);
                     $rootScope.$broadcast('user.login');
+
+                    // Check permissions for this route
+                    if ($state) {
+                        if ($state.$current && $state.$current.data && $state.$current.data.hasPermission) {
+                            if (!that.hasPermission($state.$current.data.hasPermission)) { 
+                                safeApply($rootScope, function() {
+                                    transitionTo(defaultRoute, true);
+                                });
+                            }
+                        }
+                    } else if ($route) {
+                        if ($route.current && $route.current.$$route.hasPermission) {
+                            if (!that.hasPermission($route.current.$$route.hasPermission)) { 
+                                safeApply($rootScope, function() {
+                                    transitionTo(defaultRoute);
+                                });
+                            }
+                        }
+                    }
                 });
-    		},
+            },
 
             // Sign up a new user and logs in
             signup: function(user, callback) {
@@ -362,7 +396,7 @@
                     });
                 }, interval || 20000);
             }
-    	};
+        };
 
         // Extend the current user with hasPermission() and hasFeature()
         angular.extend(user, { 
@@ -379,25 +413,25 @@
 
     // Logout directive
     userappModule.directive('uaLogout', function(user) {
-    	return {
-    		restrict: 'A',
-    		link: function(scope, element, attrs) {
+        return {
+            restrict: 'A',
+            link: function(scope, element, attrs) {
                 var evHandler = function(e) {
                     e.preventDefault();
                     user.logout();
                     return false;
                 };
 
-    			element.on ? element.on('click', evHandler) : element.bind('click', evHandler);
-    		}
-    	};
+                element.on ? element.on('click', evHandler) : element.bind('click', evHandler);
+            }
+        };
     });
 
     // Login directive
     userappModule.directive('uaLogin', function($rootScope, user) {
-    	return {
-    		restrict: 'A',
-    		link: function(scope, element, attrs) {
+        return {
+            restrict: 'A',
+            link: function(scope, element, attrs) {
                 var evHandler = function(e) {
                     e.preventDefault();
 
@@ -410,9 +444,9 @@
                     return false;
                 };
 
-    			element.on ? element.on('submit', evHandler) : element.bind('submit', evHandler);
-    		}
-    	};
+                element.on ? element.on('submit', evHandler) : element.bind('submit', evHandler);
+            }
+        };
     });
 
     // Signup directive

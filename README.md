@@ -210,6 +210,18 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
 
 See [example/](https://github.com/userapp-io/userapp-angular/tree/master/example) for a demo app based on [angular-seed](https://github.com/angular/angular-seed).
 
+## Permission-based routes
+
+To add permissions to a route, use the ´hasPermission´ property and specify all the required permissions as an array, like this:
+
+    $routeProvider.when('/admin', {templateUrl: 'partials/admin.html', hasPermission: ['admin']});
+
+or as a string, like this:
+
+    $routeProvider.when('/admin', {templateUrl: 'partials/admin.html', hasPermission: 'admin'});
+
+Logged in users who try to access the route without the proper permissions will be redirected to the default route.
+
 ## Back-end
 
 To connect your AngularJS app to a back-end API, perform the AJAX requests on the same domain. And then on the back-end, get the cookie `ua_session_token` and use UserApp's [token.heartbeat()](https://app.userapp.io/#/docs/token/#heartbeat) or [user.get()](https://app.userapp.io/#/docs/user/#get) to verify that the user is authenticated. The result should then be cached to reduce round-trips to UserApp.
