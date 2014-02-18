@@ -37,7 +37,7 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
 
 5. Set `public` to `true` on the routes you want to make public. And set `login` to `true` on the login route:
 
-        $routeProvider.when('/login', {templateUrl: 'partials/login.html', public: true, login: true});
+        $routeProvider.when('/login', {templateUrl: 'partials/login.html', login: true});
         $routeProvider.when('/signup', {templateUrl: 'partials/signup.html', public: true});
 
   The `.otherwise()` route should be set to where you want your users to be redirected after login. Example:
@@ -54,14 +54,121 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
 
 7. Hide elements that should only be visible when logged in:
 
-        <div ng-show="user.authorized">Welcome!</div>
+        <div ng-show="user.authenticated">Welcome!</div>
 
 8. Use the `user` object to access properties on the logged in user:
 
-        <div ng-show="user.authorized">Welcome {{ user.first_name }}!</div>
+        <div ng-show="user.authenticated">Welcome {{ user.first_name }}!</div>
 
 9. Read this documention and the [UserApp Documentation](https://app.userapp.io/#/docs/) to learn how to use the full API!
 
+## Verify email address
+
+To force your new sign-ups to verify their email address, you first need to activate the Email Add-on in UserApp, and then configure the Verification Email.
+
+When this is done, you need to modify your sign up page to show a message to the user after they have signed up. This message should tell them to check their inbox for a verification email.
+
+When a verification email has been sent, the variable `verificationEmailSent` will be set to `true`, so just use `ng-show` to show/hide the message:
+
+    <p ng-show="verificationEmailSent">An email has been sent to your inbox. Click on the link to verify your account.</p>
+
+This email should be configured to include a link to a route that you will set up with UserApp by adding the `verify_email` flag:
+
+    $routeProvider.when('/verify-email', {templateUrl: 'partials/verify-email.html', verify_email: true});
+
+**Note:** Don't provide this route with a controller, the module will automatically do that. If you want to handle errors, check if the usual `error` object is set.
+
+The template `partials/verify-email.html` could look something like this:
+
+    <div ng-show="loading">
+    	Verifying your email address, please wait...
+    </div>
+    <div ng-show="!loading">
+    	Your email address has been verified, <a href="#/login">click here</a> to log in.
+    </div>
+
+The variable `loading` is set to `true` while the email token is being verified against UserApp.
+
+Now, log in into UserApp and edit the Verification Email to include a link to `http://yourapp.com/#/verify-email?email_token={{email_token}}`,
+where "http://yourapp.com" should be replaced with your own address (e.g. "http://localhost").
+
+And that should do it! Try to sign up with your own email address and check that the flow works as it should.
+
+## Reset password
+
+To implement a reset-password functionality together with UserApp's Email Add-on, first make sure that the add-on is enabled and that you have enabled the reset-password email. (Log in->Add-ons->Email).
+
+Then create a new route that will be used for the reset-password form:
+
+    $routeProvider.when('/reset-password', {templateUrl: 'partials/reset-password.html', public: true});
+
+**Note:** Set the `public` flag to `true` so it will be accessible without logging in.
+
+The template `partials/reset-password.html` should consist of a form with an input box for login/username, and a submit button. Something like this:
+
+    <form ua-reset-password ng-show="!emailSent">
+        <input name="login" placeholder="Username"><br>
+        <button type="submit">Send email</button>
+        
+        <p ng-show="error">{{ error.message }}</p>
+    </form>
+
+    <p ng-show="emailSent">An email has been sent to your inbox. Click on the link to set a new password.</p>
+
+The directive `ua-reset-password` connects the form to UserApp, with the input named `login` as the login name. When an error occurs, the `error` object will contain more information about it.
+
+When the email has been sent, the variable `emailSent` is set to `true`. Use this to show a friendly message to the user, like in the example above.
+
+Next step is to set up the route which the user will enter the new password. Create a new route with the `set_password` flag set to `true`, like this:
+
+    $routeProvider.when('/set-password', {templateUrl: 'partials/set-password.html', set_password: true});
+
+The template `partials/set-password.html` should consist of a form with an input box for the new password, and a submit button:
+
+    <form ua-set-password ng-show="!passwordSaved">
+        <input name="new_password" placeholder="New password"><br>
+        <button type="submit">Send email</button>
+        
+        <p ng-show="error">{{ error.message }}</p>
+    </form>
+
+    <p ng-show="passwordSaved">Your new password has been saved, now <a href="#/login">log in</a>!</p>
+
+Attach the form to UserApp with the `ua-set-password` directive and an input named `new_password`. Use the `error` object to show errors. When the password has been saved, the variable `passwordSaved` will be set to `true`.
+
+And last, log into UserApp and include a link to the set-password form in the Reset Password email, so something like this: `http://yourapp.com/#/set-password?password_token={{password_token}}`, where "http://yourapp.com" should be replaced with your own address (e.g. "http://localhost").
+
+## Permission-based routes
+
+To add permissions to a route, use the ´hasPermission´ property and specify all the required permissions as an array, like this:
+
+    $routeProvider.when('/admin', {templateUrl: 'partials/admin.html', hasPermission: ['admin']});
+
+or as a string, like this:
+
+    $routeProvider.when('/admin', {templateUrl: 'partials/admin.html', hasPermission: 'admin'});
+
+Logged in users who try to access the route without the proper permissions will be redirected to the default route.
+
+## Loaders
+
+All directives except `ua-logout` sets the scope variable `loading` to `true` while it's doing work in the background. This way you could show a loader animation while waiting for the UserApp API to respond. Here's an example with the login form:
+
+    <form ua-login>
+	    <input name="login" placeholder="Username"><br>
+	    <input name="password" placeholder="Password" type="password"><br>
+
+	    <button type="submit">
+		    <span ng-show="!loading">Log In</span>
+		    <img ng-show="loading" src="https://app.userapp.io/img/ajax-loader-transparent.gif">
+	    </button>
+
+	    <p ng-show="error">{{ error.message }}</p>
+    </form>
+
+## Back-end
+
+To connect your AngularJS app to a back-end API, perform the AJAX requests on the same domain. And then on the back-end, get the cookie `ua_session_token` and use UserApp's [token.heartbeat()](https://app.userapp.io/#/docs/token/#heartbeat) or [user.get()](https://app.userapp.io/#/docs/user/#get) to verify that the user is authenticated. The result should then be cached to reduce round-trips to UserApp.
 
 ## Services
 
@@ -79,7 +186,7 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
 
   Returns the status of the session:
 
-		{ authorized: false }
+		{ authenticated: false }
 
 * **user.appId([value])**
 
@@ -111,6 +218,24 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
                 
 		user.logout(function(error, result) {});
 
+* **user.verifyEmail(emailToken[, callback])**
+
+  Verifies an email address using an email token. Should be used together with the Email Add-on.
+
+		user.verifyEmail('EMAIL_TOKEN', function(error, result) {});
+
+* **user.resetPassword(user[, callback])**
+
+  Use this together with the Email Add-on to send a reset-password email to the user.
+
+		user.resetPassword({ login: 'timothy' }, function(error, result) {});
+
+* **user.setPassword(passwordToken, newPassword[, callback])**
+
+  Sets a new password using a password token.
+
+		user.setPassword('PASSWORD_TOKEN', 'secretPassw0rd', function(error, result) {});
+
 * **user.hasPermission(permissions)**
 
   Returns `true` if the user has all the permissions in the string or array `permissions`. Else it returns `false`.
@@ -133,13 +258,14 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
 
 * **ua-login**
 
-  Add this to a form tag to attach it to the `user.login()` function. Use `ua-error` to specify an error element.
+  Add this to a form tag to attach it to the `user.login()` function. The `error` object will be set when an error occurs.
 
-		<form ua-login ua-error="error-msg">
+		<form ua-login>
 			<input name="login" placeholder="Username"><br>
 			<input name="password" placeholder="Password" type="password"><br>
 			<button type="submit">Log In</button>
-			<p id="error-msg"></p>
+			
+			<p ng-show="error">{{ error.message }}</p>
 		</form>
 
 * **ua-logout**
@@ -150,15 +276,46 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
 
 * **ua-signup**
 
-  Add this to a form tag to attach it to the `user.signup()` function. Use `ua-error` to specify an error element. Use `ua-is-email` on the login input to specify that login is the same as email. All input field names must reflect the [user's properties](https://app.userapp.io/#/docs/user/#properties).
+  Add this to a form tag to attach it to the `user.signup()` function. Use the `error` object to show an message if an error occurs. Use `ua-is-email` on the login input to specify that login is the same as email. All input field names must reflect the [user's properties](https://app.userapp.io/#/docs/user/#properties).
 
-		<form ua-signup ua-error="error-msg">
+		<form ua-signup>
 			<input name="first_name" placeholder="Name"><br>
 			<input name="login" ua-is-email placeholder="Email"><br>
 			<input name="password" placeholder="Password" type="password"><br>
 			<button type="submit">Create Account</button>
-			<p id="error-msg"></p>
+			
+			<p ng-show="error">{{ error.message }}</p>
 		</form>
+
+  To set custom properties on the user at the signup, name the custom fields `properties.[name]`. For example if you have a property called `age`, create an input like this:
+
+		<input name="properties.age" placeholder="Age">
+
+  **Note:** If you have activated the Email Add-on and the Verification Email, the user won't be logged in after the sign up. Instead, the variable `verificationEmailSent` will be set to `true` so you could display a message to the user asking them to check the inbox.
+
+* **ua-reset-password**
+
+  Add this to a form tag to attach it to the `user.resetPassword()` function. Use the `error` object to show an message if an error occurs. The form must have an input named `login`. When the email has been sent out, the variable `emailSent` will be set to `true`. This directive can only be used together with the Email Add-on to send reset-password email.
+
+		<form ua-reset-password ng-show="!emailSent">
+		    <input name="login" placeholder="Username"><br>
+		    <button type="submit">Send email</button>
+
+		    <p ng-show="error">{{ error.message }}</p>
+		</form>
+		<p ng-show="emailSent">An email has been sent to your inbox. Click on the link to set a new password.</p>
+
+* **ua-set-password**
+
+  Add this to a form tag to attach it to the `user.setPassword()` function (i.e. the API method `user.changePassword()` with the parameter `password_token`). Use the `error` object to show an message if an error occurs. The form must have an input named `new_password`. When the password has been saved, the variable `passwordSaved` will be set to `true`.
+
+ 		<form ua-set-password ng-show="!passwordSaved">
+		    <input name="new_password" type="password" placeholder="New password"><br>
+		    <button type="submit">Save</button>
+    
+		    <p ng-show="error">{{ error.message }}</p>
+		</form>
+		<p ng-show="passwordSaved">Your new password has been saved, now <a href="#/login">log in</a>!</p>
 
 * **ua-oauth-link**
 
@@ -210,22 +367,6 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
 
 See [example/](https://github.com/userapp-io/userapp-angular/tree/master/example) for a demo app based on [angular-seed](https://github.com/angular/angular-seed).
 
-## Permission-based routes
-
-To add permissions to a route, use the ´hasPermission´ property and specify all the required permissions as an array, like this:
-
-    $routeProvider.when('/admin', {templateUrl: 'partials/admin.html', hasPermission: ['admin']});
-
-or as a string, like this:
-
-    $routeProvider.when('/admin', {templateUrl: 'partials/admin.html', hasPermission: 'admin'});
-
-Logged in users who try to access the route without the proper permissions will be redirected to the default route.
-
-## Back-end
-
-To connect your AngularJS app to a back-end API, perform the AJAX requests on the same domain. And then on the back-end, get the cookie `ua_session_token` and use UserApp's [token.heartbeat()](https://app.userapp.io/#/docs/token/#heartbeat) or [user.get()](https://app.userapp.io/#/docs/user/#get) to verify that the user is authenticated. The result should then be cached to reduce round-trips to UserApp.
-
 ## Help
 
 Contact us via email at support@userapp.io or visit our [support center](https://help.userapp.io). You can also see the [UserApp documentation](https://app.userapp.io/#/docs/) for more information.
@@ -233,7 +374,3 @@ Contact us via email at support@userapp.io or visit our [support center](https:/
 ## License
 
 MIT, see LICENSE.
-
-
-
-

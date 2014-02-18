@@ -1,11 +1,14 @@
 <p>Sign up</p>
 
-<form ua-signup ua-error="error-msg">
+<form ua-signup ng-show="!verificationEmailSent">
 	<input name="first_name" placeholder="Your name"><br>
 	<input name="login" ua-is-email placeholder="Email"><br>
 	<input name="password" placeholder="Password" type="password"><br>
 	<p><button type="submit">Create account</button> or <a href="" ua-oauth-link="google">Sign up with Google</a></p>
-	<p id="error-msg"></p>
+	
+	<p ng-show="loading"><img src="https://app.userapp.io/img/ajax-loader-transparent.gif"></p>
+	<p ng-show="error">{{ error.message }}</p>
 </form>
 
+<p ng-show="verificationEmailSent">An email has been sent to your inbox. Click on the link to verify your account.</p>
 <p><a href="#/login">Log in</a></p>

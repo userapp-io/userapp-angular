@@ -1,10 +1,13 @@
 <p>Please log in</p>
 
-<form ua-login ua-error="error-msg">
+<form ua-login>
 	<input name="login" placeholder="Username"><br>
 	<input name="password" placeholder="Password" type="password"><br>
 	<p><button type="submit">Log in</button> or <a href="" ua-oauth-link="google">Log in with Google</a></p>
-	<p id="error-msg"></p>
+	
+	<p ng-show="loading"><img src="https://app.userapp.io/img/ajax-loader-transparent.gif"></p>
+	<p ng-show="error">{{ error.message }}</p>
 </form>
 
 <p><a href="#/signup">Sign up</a></p>
+<p><a href="#/reset-password">Reset password</a></p>

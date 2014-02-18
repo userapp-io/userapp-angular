@@ -1,0 +1,9 @@
+<div ng-show="!error">
+	<div ng-show="loading">
+		Verifying your email address, please wait...
+	</div>
+	<div ng-show="!loading">
+		Your email address has been verified, <a href="#/login">click here</a> to log in.
+	</div>
+</div>
+<p ng-show="error">{{ error.message }}</p>

@@ -8,7 +8,10 @@ Example of how to use the [UserApp AngularJS module](https://github.com/userapp-
 
 * Configure your web server to the example path and browse to it with your web browser.
 
-* Try to sign up and log in.
+* Try to sign up, log in, reset your password, etc.
+
+**Note:** If you want to test the verification emails and reset password functionality you need to enable those emails in the Email Add-on. 
+You find more info about that in the [AngularJS module docs](https://github.com/userapp-io/userapp-angular/).
 
 ## Help
 

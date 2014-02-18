@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="css/app.css"/>
 </head>
 <body>
-  <ul class="menu" ng-show="user.authorized">
+  <ul class="menu" ng-show="user.authenticated">
     <li><a href="#/view1">view1</a></li>
     <li><a href="#/view2">view2</a></li>
     <li><a href="#/login" ua-logout>log out</a></li>
@@ -15,7 +15,7 @@
   <div ng-view></div>
 
   <div>Angular seed app: v<span app-version></span></div>
-  <div ng-show="user.authorized">Email: {{ user.email }}</div>
+  <div ng-show="user.authenticated">Email: {{ user.email }}</div>
 
   <!-- In production use:
   <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
