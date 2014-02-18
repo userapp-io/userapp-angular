@@ -1,6 +1,6 @@
 {
         "name": "userapp-angular",
-        "version": "1.3.0",
+        "version": "1.4.1",
         "main": "./angularjs.userapp.js",
 	"dependencies": {
 		"userapp": "latest"
