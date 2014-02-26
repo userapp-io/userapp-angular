@@ -319,7 +319,7 @@ To connect your AngularJS app to a back-end API, perform the AJAX requests on th
 
 * **ua-oauth-link**
 
-  Add this to a link tag in order to authenticate using an OAuth provider. The value should be an OAuth provider id such as `google`, `github`, `facebook` or `linkedin`. *Additionally:* Use `ua-error` to specify an error element. Use `ua-oauth-scopes` to specify OAuth scopes to request by provider. The scopes must be a comma-separated list of scopes, i.e. `user,user:email`. Use `ua-oauth-redirect-uri` to explicitly specify the URI to be redirected to after provider has performed authentication. If not specified, the default URI will be `/#/oauth/callback/`.
+  Add this to a link tag in order to authenticate using an OAuth provider. The value should be an OAuth provider id such as `google`, `github`, `facebook` or `linkedin`. *Additionally:* Use the `error` object to show an message if an error occurs. Use `ua-oauth-scopes` to specify OAuth scopes to request by provider. The scopes must be a comma-separated list of scopes, i.e. `user,user:email`. Use `ua-oauth-redirect-uri` to explicitly specify the URI to be redirected to after provider has performed authentication. If not specified, the default URI will be `/#/oauth/callback/`.
 
 		<a href="" ua-oauth-link="google">Log in with Google</a>
 
