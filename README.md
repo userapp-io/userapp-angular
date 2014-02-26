@@ -140,7 +140,7 @@ And last, log into UserApp and include a link to the set-password form in the Re
 
 ## Permission-based routes
 
-To add permissions to a route, use the ´hasPermission´ property and specify all the required permissions as an array, like this:
+To add permissions to a route, use the `hasPermission` property and specify all the required permissions as an array, like this:
 
     $routeProvider.when('/admin', {templateUrl: 'partials/admin.html', hasPermission: ['admin']});
 
