@@ -1,10 +1,10 @@
 'use strict';
 
-(function(){
-    // Module with AngularJS services and directives that integrates UserApp into your app
-    // https://github.com/userapp-io/userapp-angular
-    var userappModule = angular.module('UserApp', []);
+// Module with AngularJS services and directives that integrates UserApp into your app
+// https://github.com/userapp-io/userapp-angular
+var userappModule = angular.module('UserApp', []);
 
+(function(){
     // Expose the UserApp API
     userappModule.value('UserApp', UserApp);
 
