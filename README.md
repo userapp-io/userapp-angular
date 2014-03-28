@@ -14,7 +14,7 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
 1. Include the [UserApp JavaScript library](https://app.userapp.io/#/docs/libs/javascript/) and this AngularJS module in your *index.html*:
 
         <script src="https://app.userapp.io/js/userapp.client.js"></script>
-        <script src="https://rawgithub.com/userapp-io/userapp-angular/master/angularjs.userapp.js"></script>
+        <script src="https://app.userapp.io/js/angularjs.userapp.js"></script>
 
   (You can also install the module with bower: `$ bower install userapp-angular`)
 
