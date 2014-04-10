@@ -45,7 +45,7 @@ var userappModule = angular.module('UserApp', []);
     userappModule.factory('user', function($rootScope, $location, $injector, $log) {
         var user = {};
         var appId = null;
-        var token = Kaka.get('ua_session_token');
+        var token = Cookies.get('ua_session_token');
         var status = { authorized: false, authenticated: false };
         var heartBeatInterval = -1;
         var defaultRoute = null;
@@ -225,7 +225,7 @@ var userappModule = angular.module('UserApp', []);
                 status.authenticated = false;
 
                 // Remove session cookie
-                Kaka.remove('ua_session_token');
+                Cookies.expire('ua_session_token');
 
                 for (var key in user) {
                     delete user[key];
@@ -269,7 +269,7 @@ var userappModule = angular.module('UserApp', []);
                     $rootScope.user.authenticated = true;
 
                     // Set session cookie
-                    Kaka.set('ua_session_token', token);
+                    Cookies.set('ua_session_token', token, { expires: new Date(new Date().getTime() + 31536000000) });
                 }
                 
                 return token;
@@ -788,59 +788,6 @@ var userappModule = angular.module('UserApp', []);
         };
     });
 
-
-    // Kaka - The Embeddable Cookie Library
-
-    // Kaka was created for a purpose, and one purpose only. To add simple cookie support for libraries that need it!
-    // It does this with a simple unrestricted license. So change the code, the name (please!), and use it however you like!!
-
-    // https://github.com/comfirm/Kaka.js
-
-    var Kaka = window.Kaka = {};
-
-    Kaka.get = function(name){
-            var cookies = {};
-            var decodeComponent = decodeURIComponent;
-            var data = (document.cookie || "").split("; ");
-
-            for(var i=0;i<data.length;++i){
-                    var segments = data[i].split("=", 2);
-                    if(segments.length == 2){
-                        var decoded = "";
-                        try {
-                            decoded = decodeComponent(segments[1]);
-                        } catch(e) {
-                            decoded = segments[1];
-                        }
-                        
-                        cookies[decodeComponent(segments[0])] = decoded;
-                    }
-            }
-
-            return (name === undefined ? cookies : (name in cookies ? cookies[name] : null));
-    };
-
-    Kaka.set = function(name, value, expires, path){
-            var variables = {};
-            var encodeComponent = encodeURIComponent;
-
-            variables[name] = value == undefined || value == null ? '' : value;
-            variables['path'] = path || '/';
-
-            if(expires && expires.toGMTString){
-                    variables["expires"] = expires.toGMTString();
-            }
-
-            var cookie = "";
-
-            for(var key in variables){
-                    cookie += (cookie != "" ? "; " : "") + encodeComponent(key) + "=" + encodeComponent(variables[key]);
-            }
-
-            document.cookie = cookie;
-    };
-
-    Kaka.remove = function(name){
-            Kaka.set(name, null, new Date(0));
-    };
+    /*! Cookies.js - 0.3.1; Copyright (c) 2013, Scott Hamper; http://www.opensource.org/licenses/MIT */
+    (function(e){"use strict";var a=function(b,d,c){return 1===arguments.length?a.get(b):a.set(b,d,c)};a._document=document;a._navigator=navigator;a.defaults={path:"/"};a.get=function(b){a._cachedDocumentCookie!==a._document.cookie&&a._renewCache();return a._cache[b]};a.set=function(b,d,c){c=a._getExtendedOptions(c);c.expires=a._getExpiresDate(d===e?-1:c.expires);a._document.cookie=a._generateCookieString(b,d,c);return a};a.expire=function(b,d){return a.set(b,e,d)};a._getExtendedOptions=function(b){return{path:b&& b.path||a.defaults.path,domain:b&&b.domain||a.defaults.domain,expires:b&&b.expires||a.defaults.expires,secure:b&&b.secure!==e?b.secure:a.defaults.secure}};a._isValidDate=function(b){return"[object Date]"===Object.prototype.toString.call(b)&&!isNaN(b.getTime())};a._getExpiresDate=function(b,d){d=d||new Date;switch(typeof b){case "number":b=new Date(d.getTime()+1E3*b);break;case "string":b=new Date(b)}if(b&&!a._isValidDate(b))throw Error("`expires` parameter cannot be converted to a valid Date instance"); return b};a._generateCookieString=function(b,a,c){b=encodeURIComponent(b);a=(a+"").replace(/[^!#$&-+\--:<-\[\]-~]/g,encodeURIComponent);c=c||{};b=b+"="+a+(c.path?";path="+c.path:"");b+=c.domain?";domain="+c.domain:"";b+=c.expires?";expires="+c.expires.toUTCString():"";return b+=c.secure?";secure":""};a._getCookieObjectFromString=function(b){var d={};b=b?b.split("; "):[];for(var c=0;c<b.length;c++){var f=a._getKeyValuePairFromCookieString(b[c]);d[f.key]===e&&(d[f.key]=f.value)}return d};a._getKeyValuePairFromCookieString= function(b){var a=b.indexOf("="),a=0>a?b.length:a;return{key:decodeURIComponent(b.substr(0,a)),value:decodeURIComponent(b.substr(a+1))}};a._renewCache=function(){a._cache=a._getCookieObjectFromString(a._document.cookie);a._cachedDocumentCookie=a._document.cookie};a._areEnabled=function(){var b="1"===a.set("cookies.js",1).get("cookies.js");a.expire("cookies.js");return b};a.enabled=a._areEnabled();"function"===typeof define&&define.amd?define(function(){return a}):"undefined"!==typeof exports?("undefined"!== typeof module&&module.exports&&(exports=module.exports=a),exports.Cookies=a):window.Cookies=a})();
 })();
