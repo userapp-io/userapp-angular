@@ -24,25 +24,13 @@ var userappModule = angular.module('UserApp', []);
         scope.$emit('user.error', error);
     };
 
-    // Safe scope apply
-    var safeApply = function(scope, fn) {
-        var phase = scope.$root.$$phase;
-        if (phase == '$apply' || phase == '$digest') {
-            if (fn && (typeof (fn) === 'function')) {
-                fn();
-            }
-        } else {
-            scope.$apply(fn);
-        }
-    };
-
     // Function to detect if a route is public or not
     var isPublic = function(route) {
         return (route.public == true || route.login == true || route.verify_email == true || route.set_password == true);
     };
 
     // Authentication service
-    userappModule.factory('user', function($rootScope, $location, $injector, $log) {
+    userappModule.factory('user', function($rootScope, $location, $injector, $log, $timeout) {
         var user = {};
         var appId = null;
         var token = Cookies.get('ua_session_token');
@@ -91,17 +79,17 @@ var userappModule = angular.module('UserApp', []);
         };
 
         // Controller for the verify email route
-        var verifyEmailController = function($scope, $location) {
+        var verifyEmailController = function($scope, $location, $timeout) {
             $scope.loading = true;
             
             var emailToken = $location.search().email_token;
             service.verifyEmail(emailToken, function(error, result) {
                 if (error) {
-                    safeApply($scope, function() {
+                    $timeout(function() {
                         $scope.error = error;
                     });
                 } else {
-                    safeApply($scope, function() {
+                    $timeout(function() {
                         $scope.loading = false;
                     });
                 }
@@ -169,13 +157,13 @@ var userappModule = angular.module('UserApp', []);
                         // Check if this state is protected
                         if ((!toState.data || (toState.data && isPublic(toState.data) == false)) && status.authenticated == false) {
                             ev.preventDefault();
-                            safeApply($rootScope, function() {
+                            $timeout(function() {
                                 // Redirect to login route
                                 transitionTo(loginRoute);
                             });
                         } else if ((!toState.data || (toState.data && toState.data.hasPermission)) && that.current.permissions) {
                             if (!that.hasPermission(toState.data.hasPermission)) { 
-                                safeApply($rootScope, function() {
+                                $timeout(function() {
                                     transitionTo(defaultRoute, true);
                                 });
                             }
@@ -192,13 +180,13 @@ var userappModule = angular.module('UserApp', []);
                         // Check if this route is protected
                         if (data.$$route && isPublic(data.$$route) == false && status.authenticated == false) {
                             ev.preventDefault();
-                            safeApply($rootScope, function() {
+                            $timeout(function() {
                                 // Redirect to login route
                                 transitionTo(loginRoute);
                             });
                         } else if (data.$$route && data.$$route.hasPermission && that.current.permissions) {
                             if (!that.hasPermission(data.$$route.hasPermission)) { 
-                                safeApply($rootScope, function() {
+                                $timeout(function() {
                                     transitionTo(defaultRoute);
                                 });
                             }
@@ -234,13 +222,13 @@ var userappModule = angular.module('UserApp', []);
                 // Redirect to login route
                 if ($state) {
                     if ($state.$current && (!$state.$current.data || isPublic($state.$current.data) == false)) {
-                        safeApply($rootScope, function() {
+                        $timeout(function() {
                             transitionTo(loginRoute, true);
                         });
                     }
                 } else if ($route) {
                     if ($route.current && isPublic($route.current.$$route) == false) {
-                        safeApply($rootScope, function() {
+                        $timeout(function() {
                             transitionTo(loginRoute);
                         });
                     }
@@ -284,13 +272,13 @@ var userappModule = angular.module('UserApp', []);
                 // Redirect to default route
                 if ($state) {
                     if ($state.$current && $state.$current.data && isPublic($state.$current.data)) {
-                        safeApply($rootScope, function() {
+                        $timeout(function() {
                             transitionTo(defaultRoute, true);
                         });
                     }
                 } else if ($route) {
                     if ($route.current && isPublic($route.current.$$route)) {
-                        safeApply($rootScope, function() {
+                        $timeout(function() {
                             transitionTo(defaultRoute);
                         });
                     }
@@ -305,7 +293,7 @@ var userappModule = angular.module('UserApp', []);
                     if ($state) {
                         if ($state.$current && $state.$current.data && $state.$current.data.hasPermission) {
                             if (!that.hasPermission($state.$current.data.hasPermission)) { 
-                                safeApply($rootScope, function() {
+                                $timeout(function() {
                                     transitionTo(defaultRoute, true);
                                 });
                             }
@@ -313,7 +301,7 @@ var userappModule = angular.module('UserApp', []);
                     } else if ($route) {
                         if ($route.current && $route.current.$$route.hasPermission) {
                             if (!that.hasPermission($route.current.$$route.hasPermission)) { 
-                                safeApply($rootScope, function() {
+                                $timeout(function() {
                                     transitionTo(defaultRoute);
                                 });
                             }
@@ -459,7 +447,7 @@ var userappModule = angular.module('UserApp', []);
 
                 UserApp.User.get({ user_id: 'self' }, function(error, result) {
                     if (!error) {
-                        safeApply($rootScope, function() {
+                        $timeout(function() {
                             angular.extend(user, result[0]);
                             callback && callback(error, result);
                         });
@@ -518,7 +506,7 @@ var userappModule = angular.module('UserApp', []);
     });
 
     // Login directive
-    userappModule.directive('uaLogin', function($rootScope, user) {
+    userappModule.directive('uaLogin', function($rootScope, $timeout, user) {
         return {
             restrict: 'A',
             link: function(scope, element, attrs) {
@@ -529,20 +517,20 @@ var userappModule = angular.module('UserApp', []);
                         return false;
                     }
 
-                    safeApply(scope, function() {
+                    $timeout(function() {
                         scope.error = null;
                         scope.loading = true;
                     });
 
                     user.login({ login: this.login.value, password: this.password.value }, function(error, result) {
                         if (error) {
-                            safeApply(scope, function() {
+                            $timeout(function() {
                                 scope.error = error;
                                 scope.loading = false;
                             });
                             return handleError(scope, error, attrs.uaError);
                         } else {
-                            safeApply(scope, function() {
+                            $timeout(function() {
                                 scope.loading = false;
                             });
                         }
@@ -557,7 +545,7 @@ var userappModule = angular.module('UserApp', []);
     });
 
     // Signup directive
-    userappModule.directive('uaSignup', function($rootScope, user, UserApp) {
+    userappModule.directive('uaSignup', function($rootScope, $timeout, user, UserApp) {
         return {
             restrict: 'A',
             link: function(scope, element, attrs) {
@@ -568,7 +556,7 @@ var userappModule = angular.module('UserApp', []);
                         return false;
                     }
 
-                    safeApply(scope, function() {
+                    $timeout(function() {
                         scope.error = null;
                         scope.verificationEmailSent = false;
                         scope.loading = true;
@@ -597,13 +585,13 @@ var userappModule = angular.module('UserApp', []);
                         if (error) {
                             if (error) {
                                 if (error.name != 'EMAIL_NOT_VERIFIED') {
-                                    safeApply(scope, function() {
+                                    $timeout(function() {
                                         scope.error = error;
                                         scope.loading = false;
                                     });
                                     return handleError(scope, error, attrs.uaError);
                                 } else {
-                                    safeApply(scope, function() {
+                                    $timeout(function() {
                                         scope.verificationEmailSent = true;
                                         scope.loading = false;
                                     });
@@ -621,7 +609,7 @@ var userappModule = angular.module('UserApp', []);
     });
     
     // Reset password directive
-    userappModule.directive('uaResetPassword', function($rootScope, user) {
+    userappModule.directive('uaResetPassword', function($rootScope, $timeout, user) {
         return {
             restrict: 'A',
             link: function(scope, element, attrs) {
@@ -632,20 +620,20 @@ var userappModule = angular.module('UserApp', []);
                         return false;
                     }
 
-                    safeApply(scope, function() {
+                    $timeout(function() {
                         scope.error = null;
                         scope.loading = true;
                     });
 
                     user.resetPassword({ login: this.login.value }, function(error, result) {
                         if (error) {
-                            safeApply(scope, function() {
+                            $timeout(function() {
                                 scope.error = error;
                                 scope.loading = false;
                             });
                             return handleError(scope, error, attrs.uaError);
                         } else {
-                            safeApply(scope, function() {
+                            $timeout(function() {
                                 scope.emailSent = true;
                                 scope.loading = false;
                             });
@@ -661,7 +649,7 @@ var userappModule = angular.module('UserApp', []);
     });
 
     // Set password directive
-    userappModule.directive('uaSetPassword', function($rootScope, $location, user) {
+    userappModule.directive('uaSetPassword', function($rootScope, $location, $timeout, user) {
         return {
             restrict: 'A',
             link: function(scope, element, attrs) {
@@ -672,20 +660,20 @@ var userappModule = angular.module('UserApp', []);
                         return false;
                     }
 
-                    safeApply(scope, function() {
+                    $timeout(function() {
                         scope.error = null;
                         scope.loading = true;
                     });
 
                     user.setPassword($location.search().password_token, this.new_password.value, function(error, result) {
                         if (error) {
-                            safeApply(scope, function() {
+                            $timeout(function() {
                                 scope.error = error;
                                 scope.loading = false;
                             });
                             return handleError(scope, error, attrs.uaError);
                         } else {
-                            safeApply(scope, function() {
+                            $timeout(function() {
                                 scope.passwordSaved = true;
                                 scope.loading = false;
                             });
@@ -701,7 +689,7 @@ var userappModule = angular.module('UserApp', []);
     });
 
     // OAuth URL directive
-    userappModule.directive('uaOauthLink', function(UserApp) {
+    userappModule.directive('uaOauthLink', function($timeout, UserApp) {
         return {
             restrict: 'A',
             link: function(scope, element, attrs) {
@@ -712,7 +700,7 @@ var userappModule = angular.module('UserApp', []);
                         return false;
                     }
 
-                    safeApply(scope, function() {
+                    $timeout(function() {
                         scope.error = null;
                         scope.loading = true;
                     });
@@ -724,7 +712,7 @@ var userappModule = angular.module('UserApp', []);
                     
                     UserApp.OAuth.getAuthorizationUrl({ provider_id: providerId, redirect_uri: redirectUri, scopes: scopes }, function(error, result){
                         if (error) {
-                            safeApply(scope, function() {
+                            $timeout(function() {
                                 scope.error = error;
                                 scope.loading = false;
                             });
