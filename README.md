@@ -240,11 +240,11 @@ To connect your AngularJS app to a back-end API, perform the AJAX requests on th
 
 * **user.getCurrent()**
   
-  Returns a promise to the logged in user (see above). Example:
+  Returns a promise to the logged in user (see above).
 
-    user.getCurrent().then(function(currentUser) {
-      console.log(currentUser.user_id);
-    });
+		user.getCurrent().then(function(currentUser) {
+		    console.log(currentUser.user_id);
+		});
 
 * **user.signup(user[, callback])**
 
