@@ -82,7 +82,7 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
 
 **From templates**
 
-Access the logged in user profile using the object `user`. It has the same fields as the [user profile](https://app.userapp.io/#/docs/user/#properties) in UserApp.
+Access the logged in user profile using the `user` object. It has the same fields as the [user profile](https://app.userapp.io/#/docs/user/#properties) in UserApp.
 
     <p>{{ user.first_name }}</p>
 
