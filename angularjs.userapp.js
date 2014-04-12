@@ -30,7 +30,7 @@ var userappModule = angular.module('UserApp', []);
     };
 
     // Authentication service
-    userappModule.factory('user', function($rootScope, $location, $injector, $log, $timeout) {
+    userappModule.factory('user', function($rootScope, $location, $injector, $log, $timeout, $q) {
         var user = {};
         var appId = null;
         var token = Cookies.get('ua_session_token');
@@ -455,6 +455,27 @@ var userappModule = angular.module('UserApp', []);
                         callback && callback(error, result);
                     }
                 });
+            },
+
+            // Load the logged in user with a promise
+            getCurrent: function() {
+                var deferred = $q.defer();
+                var that = this;
+
+                try {
+                    if (this.current.user_id) {
+                        deferred.resolve(this.current);
+                    } else {
+                        var turnOff = $rootScope.$on('user.login', function () {
+                            deferred.resolve(that.current);
+                            turnOff();
+                        });
+                    }
+                } catch(e) {
+                    deferred.reject(e);
+                }
+
+                return deferred.promise;
             },
 
             // Start session heartbeat

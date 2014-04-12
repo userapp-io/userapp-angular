@@ -1,9 +1,23 @@
-UserApp AngularJS
-=================
+UserApp AngularJS Module
+========================
 
 AngularJS module that adds user authentication to your app with [UserApp](https://www.userapp.io/). It supports protected/public routes, rerouting on login/logout, heartbeats for status checks, stores the session token in a cookie, directives for signup/login/logout, OAuth, etc.
 
 *UserApp is a cloud-based user management API for web apps with the purpose to relieve developers from having to program logic for user authentication, sign-up, invoicing, feature/property/permission management, and more.*
+
+* [Getting Started](#getting-started)
+* [Accessing the logged in user](#accessing-the-logged-in-user)
+* [Verify email address](#verify-email-address)
+* [Reset password](#reset-password)
+* [Permission-based routes](#permission-based-routes)
+* [Loaders](#loaders)
+* [Back-end](#back-end)
+* [Services](#services)
+* [Directives](#directives)
+* [Events](#events)
+* [Example](#example)
+* [Help](#help)  
+* [License](#license)
 
 ## Getting Started
 
@@ -60,7 +74,31 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
 
         <div ng-show="user.authenticated">Welcome {{ user.first_name }}!</div>
 
+  From templates you only use `user`, but to access the logged in user from controllers, use `user.current` or the promise `user.getCurrent()`.
+
 9. Read this documention and the [UserApp Documentation](https://app.userapp.io/#/docs/) to learn how to use the full API!
+
+## Accessing the logged in user
+
+**From templates**
+
+Access the logged in user profile using the object `user`. It has the same fields as the [user profile](https://app.userapp.io/#/docs/user/#properties) in UserApp.
+
+    <p>{{ user.first_name }}</p>
+
+**From controllers, services, etc.**
+
+To access the logged in user from your controllers, services, etc., use the `user` service like this:
+
+    var currentUser = user.current;
+
+But it is recommended that you use the promise instead, as the user might not have been loaded when your controller loads.
+
+    user.getCurrent().then(function(currentUser) {
+        console.log(currentUser.first_name);
+    });
+
+It has the same fields as the [user profile](https://app.userapp.io/#/docs/user/#properties) in UserApp.
 
 ## Verify email address
 
@@ -198,7 +236,15 @@ To connect your AngularJS app to a back-end API, perform the AJAX requests on th
 
 * **user.current**
 
-  The logged in user. [See User documentation](https://app.userapp.io/#/docs/user/#properties) for more info.
+  The logged in user. [See User documentation](https://app.userapp.io/#/docs/user/#properties) for more info. **Note:** This is not a function.
+
+* **user.getCurrent()**
+  
+  Returns a promise to the logged in user (see above). Example:
+
+    user.getCurrent().then(function(currentUser) {
+      console.log(currentUser.user_id);
+    });
 
 * **user.signup(user[, callback])**
 
