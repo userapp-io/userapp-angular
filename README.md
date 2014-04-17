@@ -11,6 +11,7 @@ AngularJS module that adds user authentication to your app with [UserApp](https:
 * [Reset password](#reset-password)
 * [Permission-based routes](#permission-based-routes)
 * [Loaders](#loaders)
+* [Heartbeats](#heartbeats)
 * [Back-end](#back-end)
 * [Services](#services)
 * [Directives](#directives)
@@ -252,6 +253,19 @@ All directives except `ua-logout` sets the scope variable `loading` to `true` wh
 </form>
 ```
 
+## Heartbeats
+
+The AngularJS module pings the UserApp API with a constant interval to check for status changes and the same time keep the session alive. 
+If you want to change the interval these *heartbeats* are made, or turn them off completely, just set the option `heartbeatInterval` to `0`.
+The interval is specified in milliseconds and the minimum value is 10 seconds (10000 ms). The default is 20 seconds.
+
+```javascript
+user.init({ 
+    appId: 'YOUR_APP_ID',
+    heartbeatInterval: 0
+});
+```
+
 ## Back-end
 
 To connect your AngularJS app to a back-end API, perform the AJAX requests on the same domain. And then on the back-end, get the cookie `ua_session_token` and use UserApp's [token.heartbeat()](https://app.userapp.io/#/docs/token/#heartbeat) or [user.get()](https://app.userapp.io/#/docs/user/#get) to verify that the user is authenticated. The result should then be cached to reduce round-trips to UserApp.
@@ -269,6 +283,8 @@ To connect your AngularJS app to a back-end API, perform the AJAX requests on th
   ```javascript
   user.init({ appId: 'YOUR_APP_ID' });
   ```
+  
+  Another option is the `heartbeatInterval`, documented [here](#heartbeats).
 
 * **user.status()**
 

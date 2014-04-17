@@ -33,6 +33,7 @@ var userappModule = angular.module('UserApp', []);
     userappModule.factory('user', function($rootScope, $location, $injector, $log, $timeout, $q) {
         var user = {};
         var appId = null;
+        var options = null;
         var token = Cookies.get('ua_session_token');
         var status = { authorized: false, authenticated: false };
         var heartBeatInterval = -1;
@@ -106,7 +107,8 @@ var userappModule = angular.module('UserApp', []);
             // Initialize the service
             init: function(config) {
                 var that = this;
-
+                options = config;
+		
                 if ($state) {
                     // Set the default state
                     defaultRoute = '';
@@ -149,7 +151,7 @@ var userappModule = angular.module('UserApp', []);
                 if ($state) {
                     $rootScope.$on('$stateChangeStart', function(ev, toState) {
                         // Check if this is the verify email route
-                        if (!toState.data || (toState.data && toState.data.verify_email == true)) {
+                        if (toState.data && toState.data.verify_email == true) {
                             toState.controller = verifyEmailController;
                             return;
                         }
@@ -161,7 +163,7 @@ var userappModule = angular.module('UserApp', []);
                                 // Redirect to login route
                                 transitionTo(loginRoute);
                             });
-                        } else if ((!toState.data || (toState.data && toState.data.hasPermission)) && that.current.permissions) {
+                        } else if ((toState.data && toState.data.hasPermission) && that.current.permissions) {
                             if (!that.hasPermission(toState.data.hasPermission)) { 
                                 $timeout(function() {
                                     transitionTo(defaultRoute, true);
@@ -267,7 +269,7 @@ var userappModule = angular.module('UserApp', []);
             activate: function(token, callback) {
                 var that = this;
                 this.token(token);
-                this.startHeartbeat();
+                this.startHeartbeat(options.heartbeatInterval);
 
                 // Redirect to default route
                 if ($state) {
@@ -362,7 +364,15 @@ var userappModule = angular.module('UserApp', []);
                             callback && callback({ name: 'LOCKED', message: 'Your account has been locked.' }, result);
                         } else {
                             that.activate(result.token, function() {
-                                callback && callback(error, result);
+                                /*if (UserApp.setupPersistentToken) {
+                                    UserApp.setupPersistentToken(function(token) {
+                                        that.token(token.value);
+                                        callback && callback(error, result);
+                                    });
+                                    console.log("Create persistent connection");
+                                } else {*/
+                                    callback && callback(error, result);
+                                //}
                             });
                         }
                     } else {
@@ -375,11 +385,16 @@ var userappModule = angular.module('UserApp', []);
             logout: function(callback) {
                 var that = this;
 
-                UserApp.User.logout(function(error) {});
+                /*if (UserApp.removePersistentToken) {
+                    UserApp.removePersistentToken(function(success) {
+                        that.reset();
+                    });
+                } else {*/
+                    UserApp.User.logout(function(error) {});
+                    that.reset();
+                //}
 
-                that.reset();
                 $rootScope.$broadcast('user.logout');
-
                 callback && callback(error);
             },
 
@@ -481,6 +496,10 @@ var userappModule = angular.module('UserApp', []);
             // Start session heartbeat
             startHeartbeat: function(interval) {
                 var that = this;
+
+		if (interval != undefined && interval < 10000) {
+			return;
+		}
 
                 clearInterval(heartBeatInterval);
                 heartBeatInterval = setInterval(function() {
