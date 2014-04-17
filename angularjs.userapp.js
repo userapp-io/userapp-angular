@@ -390,12 +390,15 @@ var userappModule = angular.module('UserApp', []);
                         that.reset();
                     });
                 } else {*/
-                    UserApp.User.logout(function(error) {});
-                    that.reset();
+                    UserApp.User.logout(function(error) {
+                    	that.reset();
+                    	$rootScope.$broadcast('user.logout');
+	                callback && callback(error);
+                    });  
                 //}
 
-                $rootScope.$broadcast('user.logout');
-                callback && callback(error);
+                //$rootScope.$broadcast('user.logout');
+                //callback && callback(error);
             },
 
             // Send reset password email
@@ -530,13 +533,27 @@ var userappModule = angular.module('UserApp', []);
     });
 
     // Logout directive
-    userappModule.directive('uaLogout', function(user) {
+    userappModule.directive('uaLogout', function($timeout, user) {
         return {
             restrict: 'A',
             link: function(scope, element, attrs) {
                 var evHandler = function(e) {
                     e.preventDefault();
-                    user.logout();
+                    
+                    if (scope.loading) {
+                        return false;
+                    }
+                    
+                    $timeout(function() {
+                        scope.loading = true;
+                    });
+                    
+                    user.logout(function() {
+                        $timeout(function() {
+                            scope.loading = false;
+                        });
+                    });
+                    
                     return false;
                 };
 

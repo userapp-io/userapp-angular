@@ -237,7 +237,7 @@ Logged in users who try to access the route without the proper permissions will 
 
 ## Loaders
 
-All directives except `ua-logout` sets the scope variable `loading` to `true` while it's doing work in the background. This way you could show a loader animation while waiting for the UserApp API to respond. Here's an example with the login form:
+All directives sets the scope variable `loading` to `true` while it's doing work in the background. This way you could show a loader animation while waiting for the UserApp API to respond. Here's an example with the login form:
 
 ```html
 <form ua-login>
