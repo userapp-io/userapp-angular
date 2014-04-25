@@ -16,6 +16,7 @@ AngularJS module that adds user authentication to your app with [UserApp](https:
 * [Services](#services)
 * [Directives](#directives)
 * [Events](#events)
+* [PhoneGap](#phonegap)
 * [Example](#example)
 * [Help](#help)  
 * [License](#license)
@@ -518,6 +519,12 @@ To connect your AngularJS app to a back-end API, perform the AJAX requests on th
       console.log('Bye!');
   });
   ```
+
+## PhoneGap
+
+This module works perfectly out of the box with [PhoneGap](http://phonegap.com/). 
+But if you want persistent sessions (like the Facebook, Twitter, and Instagram apps has), you need to include [userapp-phonegap](https://github.com/userapp-io/userapp-phonegap) into your project.
+It will automatically extend the AngularJS module with functionality that sets up persistent sessions.
 
 ## Example
 

@@ -142,10 +142,18 @@ var userappModule = angular.module('UserApp', []);
                 // If a UserApp token is present, use that for authentication
                 var remoteToken;
                 if (!token && (remoteToken = $location.search().ua_token)) {
-                    token = remoteToken;
+                    this.activate(remoteToken, function() {
+                        if (UserApp.setupPersistentToken) {
+                            UserApp.setupPersistentToken(function(error, token) {
+                                if (token) {
+                                    that.token(token.value);
+                                }
+                            });
+                        }
+                    });
+                } else if (token) {
+                    this.activate(token);
                 }
-
-                token && this.activate(token);
 
                 // Listen for route changes
                 if ($state) {
@@ -324,7 +332,7 @@ var userappModule = angular.module('UserApp', []);
 
                 UserApp.User.save(user, function(error, result) {
                     if (!error) {
-                        // check lock
+                        // Check locks
                         if (result.locks && result.locks.length > 0 && result.locks[0].type == 'EMAIL_NOT_VERIFIED') {
                             callback && callback({ name: 'EMAIL_NOT_VERIFIED' }, result);
                             return;
@@ -364,15 +372,16 @@ var userappModule = angular.module('UserApp', []);
                             callback && callback({ name: 'LOCKED', message: 'Your account has been locked.' }, result);
                         } else {
                             that.activate(result.token, function() {
-                                /*if (UserApp.setupPersistentToken) {
-                                    UserApp.setupPersistentToken(function(token) {
-                                        that.token(token.value);
+                                if (UserApp.setupPersistentToken) {
+                                    UserApp.setupPersistentToken(function(error, token) {
+                                        if (token) {
+                                            that.token(token.value);
+                                        }
                                         callback && callback(error, result);
                                     });
-                                    console.log("Create persistent connection");
-                                } else {*/
+                                } else {
                                     callback && callback(error, result);
-                                //}
+                                }
                             });
                         }
                     } else {
@@ -385,20 +394,19 @@ var userappModule = angular.module('UserApp', []);
             logout: function(callback) {
                 var that = this;
 
-                /*if (UserApp.removePersistentToken) {
-                    UserApp.removePersistentToken(function(success) {
+                if (UserApp.removePersistentToken) {
+                    UserApp.removePersistentToken(function(error) {
                         that.reset();
+                        $rootScope.$broadcast('user.logout');
+                        callback && callback(error);
                     });
-                } else {*/
+                } else {
                     UserApp.User.logout(function(error) {
-                    	that.reset();
-                    	$rootScope.$broadcast('user.logout');
-	                callback && callback(error);
+                        that.reset();
+                        $rootScope.$broadcast('user.logout');
+                        callback && callback(error);
                     });  
-                //}
-
-                //$rootScope.$broadcast('user.logout');
-                //callback && callback(error);
+                }
             },
 
             // Send reset password email
@@ -500,9 +508,9 @@ var userappModule = angular.module('UserApp', []);
             startHeartbeat: function(interval) {
                 var that = this;
 
-		if (interval != undefined && interval < 10000) {
-			return;
-		}
+        		if (interval != undefined && interval < 10000) {
+        			return;
+        		}
 
                 clearInterval(heartBeatInterval);
                 heartBeatInterval = setInterval(function() {
