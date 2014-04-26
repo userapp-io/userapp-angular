@@ -296,26 +296,30 @@ var userappModule = angular.module('UserApp', []);
 
                 // Load the logged in user
                 this.loadUser(function(error, result) {
-                    callback && callback(error, result);
-                    $rootScope.$broadcast('user.login');
+                    if (!error) {
+                        callback && callback(error, result);
+                        $rootScope.$broadcast('user.login');
 
-                    // Check permissions for this route
-                    if ($state) {
-                        if ($state.$current && $state.$current.data && $state.$current.data.hasPermission) {
-                            if (!that.hasPermission($state.$current.data.hasPermission)) { 
-                                $timeout(function() {
-                                    transitionTo(defaultRoute, true);
-                                });
+                        // Check permissions for this route
+                        if ($state) {
+                            if ($state.$current && $state.$current.data && $state.$current.data.hasPermission) {
+                                if (!that.hasPermission($state.$current.data.hasPermission)) { 
+                                    $timeout(function() {
+                                        transitionTo(defaultRoute, true);
+                                    });
+                                }
+                            }
+                        } else if ($route) {
+                            if ($route.current && $route.current.$$route.hasPermission) {
+                                if (!that.hasPermission($route.current.$$route.hasPermission)) { 
+                                    $timeout(function() {
+                                        transitionTo(defaultRoute);
+                                    });
+                                }
                             }
                         }
-                    } else if ($route) {
-                        if ($route.current && $route.current.$$route.hasPermission) {
-                            if (!that.hasPermission($route.current.$$route.hasPermission)) { 
-                                $timeout(function() {
-                                    transitionTo(defaultRoute);
-                                });
-                            }
-                        }
+                    } else {
+                        that.reset();
                     }
                 });
             },
