@@ -161,6 +161,11 @@ var userappModule = angular.module('UserApp', []);
                         // Check if this is the verify email route
                         if (toState.data && toState.data.verify_email == true) {
                             toState.controller = verifyEmailController;
+                            
+                            if (toState.views && toState.views['']) {
+                            	toState.views[''].controller = verifyEmailController;
+                            }
+                            
                             return;
                         }
 
