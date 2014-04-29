@@ -212,6 +212,10 @@ var userappModule = angular.module('UserApp', []);
                             if (!that.hasPermission(toState.data.hasPermission)) {
                                 accessDeniedHandler(that.current, ev, toState, toParams);
                             }
+                        } else if (toState.data && toState.data.authCheck) {
+                            if (!toState.data.authCheck(that.current, toParams)) {
+                                accessDeniedHandler(that.current, ev, toState, toParams);
+                            }
                         }
                     });
                 } else if ($route) {
@@ -227,6 +231,10 @@ var userappModule = angular.module('UserApp', []);
                             authenticationRequiredHandler(ev, data);
                         } else if (data.$$route && data.$$route.hasPermission && that.current.permissions) {
                             if (!that.hasPermission(data.$$route.hasPermission)) {
+                                accessDeniedHandler(that.current, ev, data);
+                            }
+                        } else if (data.$$route && data.$$route.authCheck) {
+                            if (!data.$$route.authCheck(that.current)) {
                                 accessDeniedHandler(that.current, ev, data);
                             }
                         }
