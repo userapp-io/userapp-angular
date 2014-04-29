@@ -97,6 +97,14 @@ var userappModule = angular.module('UserApp', []);
             });
         };
 
+        var authenticationRequiredHandler = function(event) {
+            event.preventDefault();
+            $timeout(function() {
+                // Redirect to login route
+                transitionTo(loginRoute);
+            });
+        };
+
         // Expose the user object to HTML templates via the root scope
         $rootScope.user = user;
         $rootScope.user.authorized = false;
@@ -104,11 +112,21 @@ var userappModule = angular.module('UserApp', []);
 
         // The service
         var service = {
+            /**
+             * Overwrites the default handler that is invoked if a route/state is activated that requires
+             * authentication but no user is logged in. If the Angular router is used, the handler is passed
+             * the $routeChangeStart event and the route that requires authentication. If UI router is used, the handler
+             * is passed the $stateChangeStart event, the state that requires authentication, and its state parameters.
+             */
+            onAuthenticationRequired: function(handler) {
+                authenticationRequiredHandler = handler;
+            },
+
             // Initialize the service
             init: function(config) {
                 var that = this;
                 options = config;
-		
+
                 if ($state) {
                     // Set the default state
                     defaultRoute = '';
@@ -157,13 +175,13 @@ var userappModule = angular.module('UserApp', []);
 
                 // Listen for route changes
                 if ($state) {
-                    $rootScope.$on('$stateChangeStart', function(ev, toState) {
+                    $rootScope.$on('$stateChangeStart', function(ev, toState, toParams) {
                         // Check if this is the verify email route
                         if (toState.data && toState.data.verify_email == true) {
                             toState.controller = verifyEmailController;
                             
                             if (toState.views && toState.views['']) {
-                            	toState.views[''].controller = verifyEmailController;
+                                toState.views[''].controller = verifyEmailController;
                             }
                             
                             return;
@@ -171,11 +189,7 @@ var userappModule = angular.module('UserApp', []);
 
                         // Check if this state is protected
                         if ((!toState.data || (toState.data && isPublic(toState.data) == false)) && status.authenticated == false) {
-                            ev.preventDefault();
-                            $timeout(function() {
-                                // Redirect to login route
-                                transitionTo(loginRoute);
-                            });
+                            authenticationRequiredHandler(ev, toState, toParams);
                         } else if ((toState.data && toState.data.hasPermission) && that.current.permissions) {
                             if (!that.hasPermission(toState.data.hasPermission)) { 
                                 $timeout(function() {
@@ -194,11 +208,7 @@ var userappModule = angular.module('UserApp', []);
 
                         // Check if this route is protected
                         if (data.$$route && isPublic(data.$$route) == false && status.authenticated == false) {
-                            ev.preventDefault();
-                            $timeout(function() {
-                                // Redirect to login route
-                                transitionTo(loginRoute);
-                            });
+                            authenticationRequiredHandler(ev, data);
                         } else if (data.$$route && data.$$route.hasPermission && that.current.permissions) {
                             if (!that.hasPermission(data.$$route.hasPermission)) { 
                                 $timeout(function() {
@@ -517,9 +527,9 @@ var userappModule = angular.module('UserApp', []);
             startHeartbeat: function(interval) {
                 var that = this;
 
-        		if (interval != undefined && interval < 10000) {
-        			return;
-        		}
+                if (interval != undefined && interval < 10000) {
+                    return;
+                }
 
                 clearInterval(heartBeatInterval);
                 heartBeatInterval = setInterval(function() {
