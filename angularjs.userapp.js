@@ -266,19 +266,11 @@ var userappModule = angular.module('UserApp', []);
                     delete user[key];
                 }
 
-                // Redirect to login route
+                // reload the current route/state which triggers reevaluation of access rights
                 if ($state) {
-                    if ($state.$current && (!$state.$current.data || isPublic($state.$current.data) == false)) {
-                        $timeout(function() {
-                            transitionTo(loginRoute, true);
-                        });
-                    }
+                    $state.reload();
                 } else if ($route) {
-                    if ($route.current && isPublic($route.current.$$route) == false) {
-                        $timeout(function() {
-                            transitionTo(loginRoute);
-                        });
-                    }
+                    $route.reload();
                 }
             },
 
@@ -316,44 +308,17 @@ var userappModule = angular.module('UserApp', []);
                 this.token(token);
                 this.startHeartbeat(options.heartbeatInterval);
 
-                // Redirect to default route
-                if ($state) {
-                    if ($state.$current && $state.$current.data && isPublic($state.$current.data)) {
-                        $timeout(function() {
-                            transitionTo(defaultRoute, true);
-                        });
-                    }
-                } else if ($route) {
-                    if ($route.current && isPublic($route.current.$$route)) {
-                        $timeout(function() {
-                            transitionTo(defaultRoute);
-                        });
-                    }
-                }
-
                 // Load the logged in user
                 this.loadUser(function(error, result) {
                     if (!error) {
                         callback && callback(error, result);
                         $rootScope.$broadcast('user.login');
 
-                        // Check permissions for this route
+                        // reload the current route/state which triggers reevaluation of access rights
                         if ($state) {
-                            if ($state.$current && $state.$current.data && $state.$current.data.hasPermission) {
-                                if (!that.hasPermission($state.$current.data.hasPermission)) { 
-                                    $timeout(function() {
-                                        transitionTo(defaultRoute, true);
-                                    });
-                                }
-                            }
+                            $state.reload();
                         } else if ($route) {
-                            if ($route.current && $route.current.$$route.hasPermission) {
-                                if (!that.hasPermission($route.current.$$route.hasPermission)) { 
-                                    $timeout(function() {
-                                        transitionTo(defaultRoute);
-                                    });
-                                }
-                            }
+                            $route.reload();
                         }
                     } else {
                         that.reset();
