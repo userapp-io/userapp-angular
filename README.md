@@ -9,7 +9,7 @@ AngularJS module that adds user authentication to your app with [UserApp](https:
 * [Accessing the logged in user](#accessing-the-logged-in-user)
 * [Verify email address](#verify-email-address)
 * [Reset password](#reset-password)
-* [Permission-based routes](#permission-based-routes)
+* [Access-controlling routes](#access-controlling-routes)
 * [Loaders](#loaders)
 * [Heartbeats](#heartbeats)
 * [Back-end](#back-end)
@@ -220,9 +220,32 @@ Attach the form to UserApp with the `ua-set-password` directive and an input nam
 
 And last, log into UserApp and include a link to the set-password form in the Reset Password email, so something like this: `http://yourapp.com/#/set-password?password_token={{password_token}}`, where "http://yourapp.com" should be replaced with your own address (e.g. "http://localhost").
 
-## Permission-based routes
+## Access-controlling routes
 
-To add permissions to a route, use the `hasPermission` property and specify all the required permissions as an array, like this:
+Routes/states can be declared as public by setting the `public` property for the route to `true`:
+
+```javascript
+$routeProvider.when('/home', { public: true });
+```
+
+or when using UI router:
+
+```javascript
+$stateProvider.state('home', { data: { public: true } });
+```
+
+The `login` route/state, the `verify_email` route/state, and the `set_password` route/state are considered public by default.
+
+If the user is not signed in and accesses a non-public route, the `authenticationRequiredHandler` is invoked. The default handler prevents the route/state from loading and transitions to the `login` route. Another handler can be installed like this:
+```javascript
+user.onAuthenticationRequired(function(event, toState, toParams) {
+   // open login popup, do transition, ...
+});
+```
+For the Angular router the ```routeChangeEvent``` and the target route are passed as parameters to the handler. For the UI router, the ```stateChangeEvent```, the target state and the target state parameters are passed.
+
+
+To add required permissions to a route, use the `hasPermission` property and specify all the permissions as an array, like this:
 
 ```javascript
 $routeProvider.when('/admin', {templateUrl: 'partials/admin.html', hasPermission: ['admin']});
@@ -234,7 +257,27 @@ or as a string, like this:
 $routeProvider.when('/admin', {templateUrl: 'partials/admin.html', hasPermission: 'admin'});
 ```
 
-Logged in users who try to access the route without the proper permissions will be redirected to the default route.
+For a more general authorization check, use the `authCheck` property and specify a function that takes the currently logged in user and returns `true` if access to this user should be allowed and `false` if access shall be denied.
+```javascript
+$routeProvider.when('/admin', {templateUrl: 'partials/admin.html', authCheck: function(user) { return user.properties['abc'] === 'def' } });
+```
+
+If the UI router is used, the state parameters are passed as a second parameter:
+
+```javascript
+$stateProvider.state('admin', { data: { public: false, authCheck: function(user, params) { return user.properties['orgId'] === params.id } } });
+```
+
+If access is denied to the logged in user (either because a required permission was not found or `authCheck` returned false), the `authorizationDeniedHandler` is invoked. The default handler redirects to the default route. Another handler can be installed like this:
+
+```javascript
+user.onAccessDenied(function(user, event, state, params) {
+    // show popup, do transition, ...
+});
+```
+
+For the Angular router the ```routeChangeEvent``` and the target route are passed as second and third parameters to the handler. For the UI router, the ```stateChangeEvent```, the target state, and the target state parameters are passed as parameters two, three, and four.
+
 
 ## Loaders
 
