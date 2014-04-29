@@ -105,6 +105,13 @@ var userappModule = angular.module('UserApp', []);
             });
         };
 
+
+        var accessDeniedHandler = function() {
+            $timeout(function () {
+                transitionTo(defaultRoute, true);
+            });
+        };
+
         // Expose the user object to HTML templates via the root scope
         $rootScope.user = user;
         $rootScope.user.authorized = false;
@@ -120,6 +127,17 @@ var userappModule = angular.module('UserApp', []);
              */
             onAuthenticationRequired: function(handler) {
                 authenticationRequiredHandler = handler;
+            },
+            /**
+             * Overwrites the default handler that is invoked if a route/state is activated that the currently logged in
+             * user has no access to. Access is denied if the user does not have a required permission.
+             * The currently logged in user is the first parameter passed to the handler.
+             * If the Angular router is used, the handler is passed the $routeChangeStart event
+             * and the route that access was denied to. If UI router is used, the handler is passed the
+             * $stateChangeStart event, the state that access was denied to, and its state parameters.
+             */
+            onAccessDenied: function(handler) {
+                accessDeniedHandler = handler;
             },
 
             // Initialize the service
@@ -191,10 +209,8 @@ var userappModule = angular.module('UserApp', []);
                         if ((!toState.data || (toState.data && isPublic(toState.data) == false)) && status.authenticated == false) {
                             authenticationRequiredHandler(ev, toState, toParams);
                         } else if ((toState.data && toState.data.hasPermission) && that.current.permissions) {
-                            if (!that.hasPermission(toState.data.hasPermission)) { 
-                                $timeout(function() {
-                                    transitionTo(defaultRoute, true);
-                                });
+                            if (!that.hasPermission(toState.data.hasPermission)) {
+                                accessDeniedHandler(that.current, ev, toState, toParams);
                             }
                         }
                     });
@@ -210,10 +226,8 @@ var userappModule = angular.module('UserApp', []);
                         if (data.$$route && isPublic(data.$$route) == false && status.authenticated == false) {
                             authenticationRequiredHandler(ev, data);
                         } else if (data.$$route && data.$$route.hasPermission && that.current.permissions) {
-                            if (!that.hasPermission(data.$$route.hasPermission)) { 
-                                $timeout(function() {
-                                    transitionTo(defaultRoute);
-                                });
+                            if (!that.hasPermission(data.$$route.hasPermission)) {
+                                accessDeniedHandler(that.current, ev, data);
                             }
                         }
                     });
