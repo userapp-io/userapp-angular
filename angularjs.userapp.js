@@ -312,7 +312,6 @@ var userappModule = angular.module('UserApp', []);
                 this.loadUser(function(error, result) {
                     if (!error) {
                         callback && callback(error, result);
-                        $rootScope.$broadcast('user.login');
 
                         // reload the current route/state which triggers reevaluation of access rights
                         if ($state) {
@@ -320,7 +319,9 @@ var userappModule = angular.module('UserApp', []);
                         } else if ($route) {
                             $route.reload();
                         }
-                    } else {
+
+						$rootScope.$broadcast('user.login');
+					} else {
                         that.reset();
                     }
                 });
