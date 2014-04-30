@@ -119,13 +119,13 @@ var userappModule = angular.module('UserApp', []);
                 if(stateChangeStartEvent)
                     stateChangeStartEvent.preventDefault();
                 authenticationRequiredHandler(state, stateParams);
-            } else if ((state.data && state.data.hasPermission) && user.permissions) {
+            } else if (state.data && state.data.hasPermission && user.permissions) {
                 if (!service.hasPermission(state.data.hasPermission)) {
                     if(stateChangeStartEvent)
                         stateChangeStartEvent.preventDefault();
                     accessDeniedHandler(user, state, stateParams);
                 }
-            } else if (state.data && state.data.authCheck) {
+            } else if (state.data && state.data.authCheck && status.authenticated) {
                 if (!state.data.authCheck(user, stateParams)) {
                     if(stateChangeStartEvent)
                         stateChangeStartEvent.preventDefault();
@@ -143,17 +143,17 @@ var userappModule = angular.module('UserApp', []);
                 if(routeChangeStartEvent)
                     routeChangeStartEvent.preventDefault();
                 authenticationRequiredHandler(routeChangeStartEvent, routeData);
-            } else if (routeData.$$route && routeData.$$route.hasPermission && service.current.permissions) {
+            } else if (routeData.$$route && routeData.$$route.hasPermission && user.permissions) {
                 if (!service.hasPermission(routeData.$$route.hasPermission)) {
                     if(routeChangeStartEvent)
                         routeChangeStartEvent.preventDefault();
-                    accessDeniedHandler(service.current, routeChangeStartEvent, routeData);
+                    accessDeniedHandler(user, routeChangeStartEvent, routeData);
                 }
-            } else if (routeData.$$route && routeData.$$route.authCheck) {
-                if (!routeData.$$route.authCheck(service.current)) {
+            } else if (routeData.$$route && routeData.$$route.authCheck && status.authenticated) {
+                if (!routeData.$$route.authCheck(user)) {
                     if(routeChangeStartEvent)
                         routeChangeStartEvent.preventDefault();
-                    accessDeniedHandler(service.current, routeChangeStartEvent, routeData);
+                    accessDeniedHandler(user, routeChangeStartEvent, routeData);
                 }
             }
         };
