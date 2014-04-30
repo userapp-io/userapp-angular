@@ -97,10 +97,8 @@ var userappModule = angular.module('UserApp', []);
             });
         };
 
-        var authenticationRequiredHandler = function(event) {
-            event.preventDefault();
+        var authenticationRequiredHandler = function() {
             $timeout(function() {
-                // Redirect to login route
                 transitionTo(loginRoute);
             });
         };
@@ -112,6 +110,54 @@ var userappModule = angular.module('UserApp', []);
             });
         };
 
+        /**
+         * Invokes authenticationRequired/accessDeniedHandler if state is protected. Prevents state transition
+         * from happening in these cases if a stateChangeStartEvent is given.
+         */
+        var checkAccessToState = function(state, stateParams, stateChangeStartEvent) {
+            if ((!state.data || (state.data && isPublic(state.data) == false)) && status.authenticated == false) {
+                if(stateChangeStartEvent)
+                    stateChangeStartEvent.preventDefault();
+                authenticationRequiredHandler(state, stateParams);
+            } else if ((state.data && state.data.hasPermission) && user.permissions) {
+                if (!service.hasPermission(state.data.hasPermission)) {
+                    if(stateChangeStartEvent)
+                        stateChangeStartEvent.preventDefault();
+                    accessDeniedHandler(user, state, stateParams);
+                }
+            } else if (state.data && state.data.authCheck) {
+                if (!state.data.authCheck(user, stateParams)) {
+                    if(stateChangeStartEvent)
+                        stateChangeStartEvent.preventDefault();
+                    accessDeniedHandler(user, state, stateParams);
+                }
+            }
+        };
+
+        /**
+         * Invokes authenticationRequired/accessDeniedHandler if route is protected. Prevents route transition
+         * from happening in these cases if a routeChangeStartEvent is given.
+         */
+        var checkAccessToRoute = function(routeData, routeChangeStartEvent) {
+            if (routeData.$$route && isPublic(routeData.$$route) == false && status.authenticated == false) {
+                if(routeChangeStartEvent)
+                    routeChangeStartEvent.preventDefault();
+                authenticationRequiredHandler(routeChangeStartEvent, routeData);
+            } else if (routeData.$$route && routeData.$$route.hasPermission && service.current.permissions) {
+                if (!service.hasPermission(routeData.$$route.hasPermission)) {
+                    if(routeChangeStartEvent)
+                        routeChangeStartEvent.preventDefault();
+                    accessDeniedHandler(service.current, routeChangeStartEvent, routeData);
+                }
+            } else if (routeData.$$route && routeData.$$route.authCheck) {
+                if (!routeData.$$route.authCheck(service.current)) {
+                    if(routeChangeStartEvent)
+                        routeChangeStartEvent.preventDefault();
+                    accessDeniedHandler(service.current, routeChangeStartEvent, routeData);
+                }
+            }
+        };
+
         // Expose the user object to HTML templates via the root scope
         $rootScope.user = user;
         $rootScope.user.authorized = false;
@@ -120,21 +166,21 @@ var userappModule = angular.module('UserApp', []);
         // The service
         var service = {
             /**
-             * Overwrites the default handler that is invoked if a route/state is activated that requires
-             * authentication but no user is logged in. If the Angular router is used, the handler is passed
-             * the $routeChangeStart event and the route that requires authentication. If UI router is used, the handler
-             * is passed the $stateChangeStart event, the state that requires authentication, and its state parameters.
+             * Overwrites the default handler that is invoked if a route/state is activated that requires authentication
+             * but no user is logged in. If the Angular router is used, the handler is passed the route that requires
+             * authentication. If UI router is used, the handler is passed the state that requires authentication, and
+             * its state parameters.
              */
             onAuthenticationRequired: function(handler) {
                 authenticationRequiredHandler = handler;
             },
             /**
              * Overwrites the default handler that is invoked if a route/state is activated that the currently logged in
-             * user has no access to. Access is denied if the user does not have a required permission.
+             * user has no access to. Access is denied if the user does not have a required permission or authCheck
+             * returns false.
              * The currently logged in user is the first parameter passed to the handler.
-             * If the Angular router is used, the handler is passed the $routeChangeStart event
-             * and the route that access was denied to. If UI router is used, the handler is passed the
-             * $stateChangeStart event, the state that access was denied to, and its state parameters.
+             * If the Angular router is used, the handler is passed the route that access was denied to. If UI router is
+             * used, the handler is passed the state that access was denied to, and its state parameters.
              */
             onAccessDenied: function(handler) {
                 accessDeniedHandler = handler;
@@ -205,19 +251,8 @@ var userappModule = angular.module('UserApp', []);
                             return;
                         }
 
-                        // Check if this state is protected
-                        if ((!toState.data || (toState.data && isPublic(toState.data) == false)) && status.authenticated == false) {
-                            authenticationRequiredHandler(ev, toState, toParams);
-                        } else if ((toState.data && toState.data.hasPermission) && that.current.permissions) {
-                            if (!that.hasPermission(toState.data.hasPermission)) {
-                                accessDeniedHandler(that.current, ev, toState, toParams);
-                            }
-                        } else if (toState.data && toState.data.authCheck) {
-                            if (!toState.data.authCheck(that.current, toParams)) {
-                                accessDeniedHandler(that.current, ev, toState, toParams);
-                            }
-                        }
-                    });
+                        checkAccessToState(toState, toParams, ev);
+					});
                 } else if ($route) {
                     $rootScope.$on('$routeChangeStart', function(ev, data) {
                         // Check if this is the verify email route
@@ -226,18 +261,7 @@ var userappModule = angular.module('UserApp', []);
                             return;
                         }
 
-                        // Check if this route is protected
-                        if (data.$$route && isPublic(data.$$route) == false && status.authenticated == false) {
-                            authenticationRequiredHandler(ev, data);
-                        } else if (data.$$route && data.$$route.hasPermission && that.current.permissions) {
-                            if (!that.hasPermission(data.$$route.hasPermission)) {
-                                accessDeniedHandler(that.current, ev, data);
-                            }
-                        } else if (data.$$route && data.$$route.authCheck) {
-                            if (!data.$$route.authCheck(that.current)) {
-                                accessDeniedHandler(that.current, ev, data);
-                            }
-                        }
+                        checkAccessToRoute(data, ev);
                     });
                 }
             },
@@ -266,11 +290,11 @@ var userappModule = angular.module('UserApp', []);
                     delete user[key];
                 }
 
-                // reload the current route/state which triggers reevaluation of access rights
+                // check access to the current route/state again, now that session is reset
                 if ($state) {
-                    $state.reload();
+                    checkAccessToState($state.current, $state.params);
                 } else if ($route) {
-                    $route.reload();
+                    checkAccessToRoute($route.current);
                 }
             },
 
@@ -313,11 +337,11 @@ var userappModule = angular.module('UserApp', []);
                     if (!error) {
                         callback && callback(error, result);
 
-                        // reload the current route/state which triggers reevaluation of access rights
+                        // check access to the current route/state again, now that session is activated
                         if ($state) {
-                            $state.reload();
+                            checkAccessToState($state.current, $state.params);
                         } else if ($route) {
-                            $route.reload();
+                            checkAccessToRoute($route.current);
                         }
 
 						$rootScope.$broadcast('user.login');

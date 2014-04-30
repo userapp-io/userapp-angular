@@ -236,13 +236,13 @@ $stateProvider.state('home', { data: { public: true } });
 
 The `login` route/state, the `verify_email` route/state, and the `set_password` route/state are considered public by default.
 
-If the user is not signed in and accesses a non-public route, the `authenticationRequiredHandler` is invoked. The default handler prevents the route/state from loading and transitions to the `login` route. Another handler can be installed like this:
+If the user is not signed in and accesses a non-public route, the route/state change is prevented and the `authenticationRequiredHandler` is invoked. The default handler transitions to the `login` route. Another handler can be installed like this:
 ```javascript
-user.onAuthenticationRequired(function(event, toState, toParams) {
+user.onAuthenticationRequired(function(toState, toParams) {
    // open login popup, do transition, ...
 });
 ```
-For the Angular router the ```routeChangeEvent``` and the target route are passed as parameters to the handler. For the UI router, the ```stateChangeEvent```, the target state and the target state parameters are passed.
+For the Angular router the target route is passed to the handler. For the UI router, the target state and the target state parameters are passed.
 
 
 To add required permissions to a route, use the `hasPermission` property and specify all the permissions as an array, like this:
@@ -268,15 +268,15 @@ If the UI router is used, the state parameters are passed as a second parameter:
 $stateProvider.state('admin', { data: { public: false, authCheck: function(user, params) { return user.properties['orgId'] === params.id } } });
 ```
 
-If access is denied to the logged in user (either because a required permission was not found or `authCheck` returned false), the `authorizationDeniedHandler` is invoked. The default handler redirects to the default route. Another handler can be installed like this:
+If access is denied to the logged in user (either because a required permission was not found or `authCheck` returned false), the route/state change is prevented and the `authorizationDeniedHandler` is invoked. The default handler redirects to the default route. Another handler can be installed like this:
 
 ```javascript
-user.onAccessDenied(function(user, event, state, params) {
+user.onAccessDenied(function(user, state, params) {
     // show popup, do transition, ...
 });
 ```
 
-For the Angular router the ```routeChangeEvent``` and the target route are passed as second and third parameters to the handler. For the UI router, the ```stateChangeEvent```, the target state, and the target state parameters are passed as parameters two, three, and four.
+For the Angular router the target route is passed as second parameter to the handler. For the UI router, the target state and the target state parameters are passed as parameters two and three.
 
 
 ## Loaders
