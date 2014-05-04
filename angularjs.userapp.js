@@ -125,7 +125,9 @@ var userappModule = angular.module('UserApp', []);
                         stateChangeStartEvent.preventDefault();
                     accessDeniedHandler(user, state, stateParams);
                 }
-            } else if (state.data && state.data.authCheck && status.authenticated) {
+            }
+            // only do auth check if user is loaded (indicated by user_id present)
+            else if (state.data && state.data.authCheck && user.user_id) {
                 if (!state.data.authCheck(user, stateParams)) {
                     if(stateChangeStartEvent)
                         stateChangeStartEvent.preventDefault();
