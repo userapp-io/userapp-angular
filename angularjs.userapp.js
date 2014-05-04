@@ -97,6 +97,69 @@ var userappModule = angular.module('UserApp', []);
             });
         };
 
+        var authenticationRequiredHandler = function() {
+            $timeout(function() {
+                transitionTo(loginRoute);
+            });
+        };
+
+
+        var accessDeniedHandler = function() {
+            $timeout(function () {
+                transitionTo(defaultRoute, true);
+            });
+        };
+
+        /**
+         * Invokes authenticationRequired/accessDeniedHandler if state is protected. Prevents state transition
+         * from happening in these cases if a stateChangeStartEvent is given.
+         */
+        var checkAccessToState = function(state, stateParams, stateChangeStartEvent) {
+            if ((!state.data || (state.data && isPublic(state.data) == false)) && status.authenticated == false) {
+                if(stateChangeStartEvent)
+                    stateChangeStartEvent.preventDefault();
+                authenticationRequiredHandler(state, stateParams);
+            } else if (state.data && state.data.hasPermission && user.permissions) {
+                if (!service.hasPermission(state.data.hasPermission)) {
+                    if(stateChangeStartEvent)
+                        stateChangeStartEvent.preventDefault();
+                    accessDeniedHandler(user, state, stateParams);
+                }
+            }
+            // only do auth check if user is loaded (indicated by user_id present)
+            else if (state.data && state.data.authCheck && user.user_id) {
+                if (!state.data.authCheck(user, stateParams)) {
+                    if(stateChangeStartEvent)
+                        stateChangeStartEvent.preventDefault();
+                    accessDeniedHandler(user, state, stateParams);
+                }
+            }
+        };
+
+        /**
+         * Invokes authenticationRequired/accessDeniedHandler if route is protected. Prevents route transition
+         * from happening in these cases if a routeChangeStartEvent is given.
+         */
+        var checkAccessToRoute = function(routeData, routeChangeStartEvent) {
+            if (routeData.$$route && isPublic(routeData.$$route) == false && status.authenticated == false) {
+                if(routeChangeStartEvent)
+                    routeChangeStartEvent.preventDefault();
+                authenticationRequiredHandler(routeChangeStartEvent, routeData);
+            } else if (routeData.$$route && routeData.$$route.hasPermission && user.permissions) {
+                if (!service.hasPermission(routeData.$$route.hasPermission)) {
+                    if(routeChangeStartEvent)
+                        routeChangeStartEvent.preventDefault();
+                    accessDeniedHandler(user, routeChangeStartEvent, routeData);
+                }
+            } else if (routeData.$$route && routeData.$$route.authCheck && status.authenticated) {
+                if (!routeData.$$route.authCheck(user)) {
+                    if(routeChangeStartEvent)
+                        routeChangeStartEvent.preventDefault();
+                    accessDeniedHandler(user, routeChangeStartEvent, routeData);
+                }
+            }
+        };
+
         // Expose the user object to HTML templates via the root scope
         $rootScope.user = user;
         $rootScope.user.authorized = false;
@@ -104,11 +167,32 @@ var userappModule = angular.module('UserApp', []);
 
         // The service
         var service = {
+            /**
+             * Overwrites the default handler that is invoked if a route/state is activated that requires authentication
+             * but no user is logged in. If the Angular router is used, the handler is passed the route that requires
+             * authentication. If UI router is used, the handler is passed the state that requires authentication, and
+             * its state parameters.
+             */
+            onAuthenticationRequired: function(handler) {
+                authenticationRequiredHandler = handler;
+            },
+            /**
+             * Overwrites the default handler that is invoked if a route/state is activated that the currently logged in
+             * user has no access to. Access is denied if the user does not have a required permission or authCheck
+             * returns false.
+             * The currently logged in user is the first parameter passed to the handler.
+             * If the Angular router is used, the handler is passed the route that access was denied to. If UI router is
+             * used, the handler is passed the state that access was denied to, and its state parameters.
+             */
+            onAccessDenied: function(handler) {
+                accessDeniedHandler = handler;
+            },
+
             // Initialize the service
             init: function(config) {
                 var that = this;
                 options = config;
-		
+
                 if ($state) {
                     // Set the default state
                     defaultRoute = '';
@@ -157,33 +241,20 @@ var userappModule = angular.module('UserApp', []);
 
                 // Listen for route changes
                 if ($state) {
-                    $rootScope.$on('$stateChangeStart', function(ev, toState) {
+                    $rootScope.$on('$stateChangeStart', function(ev, toState, toParams) {
                         // Check if this is the verify email route
                         if (toState.data && toState.data.verify_email == true) {
                             toState.controller = verifyEmailController;
                             
                             if (toState.views && toState.views['']) {
-                            	toState.views[''].controller = verifyEmailController;
+                                toState.views[''].controller = verifyEmailController;
                             }
                             
                             return;
                         }
 
-                        // Check if this state is protected
-                        if ((!toState.data || (toState.data && isPublic(toState.data) == false)) && status.authenticated == false) {
-                            ev.preventDefault();
-                            $timeout(function() {
-                                // Redirect to login route
-                                transitionTo(loginRoute);
-                            });
-                        } else if ((toState.data && toState.data.hasPermission) && that.current.permissions) {
-                            if (!that.hasPermission(toState.data.hasPermission)) { 
-                                $timeout(function() {
-                                    transitionTo(defaultRoute, true);
-                                });
-                            }
-                        }
-                    });
+                        checkAccessToState(toState, toParams, ev);
+					});
                 } else if ($route) {
                     $rootScope.$on('$routeChangeStart', function(ev, data) {
                         // Check if this is the verify email route
@@ -192,20 +263,7 @@ var userappModule = angular.module('UserApp', []);
                             return;
                         }
 
-                        // Check if this route is protected
-                        if (data.$$route && isPublic(data.$$route) == false && status.authenticated == false) {
-                            ev.preventDefault();
-                            $timeout(function() {
-                                // Redirect to login route
-                                transitionTo(loginRoute);
-                            });
-                        } else if (data.$$route && data.$$route.hasPermission && that.current.permissions) {
-                            if (!that.hasPermission(data.$$route.hasPermission)) { 
-                                $timeout(function() {
-                                    transitionTo(defaultRoute);
-                                });
-                            }
-                        }
+                        checkAccessToRoute(data, ev);
                     });
                 }
             },
@@ -234,19 +292,11 @@ var userappModule = angular.module('UserApp', []);
                     delete user[key];
                 }
 
-                // Redirect to login route
+                // check access to the current route/state again, now that session is reset
                 if ($state) {
-                    if ($state.$current && (!$state.$current.data || isPublic($state.$current.data) == false)) {
-                        $timeout(function() {
-                            transitionTo(loginRoute, true);
-                        });
-                    }
+                    checkAccessToState($state.current, $state.params);
                 } else if ($route) {
-                    if ($route.current && isPublic($route.current.$$route) == false) {
-                        $timeout(function() {
-                            transitionTo(loginRoute);
-                        });
-                    }
+                    checkAccessToRoute($route.current);
                 }
             },
 
@@ -284,46 +334,20 @@ var userappModule = angular.module('UserApp', []);
                 this.token(token);
                 this.startHeartbeat(options.heartbeatInterval);
 
-                // Redirect to default route
-                if ($state) {
-                    if ($state.$current && $state.$current.data && isPublic($state.$current.data)) {
-                        $timeout(function() {
-                            transitionTo(defaultRoute, true);
-                        });
-                    }
-                } else if ($route) {
-                    if ($route.current && isPublic($route.current.$$route)) {
-                        $timeout(function() {
-                            transitionTo(defaultRoute);
-                        });
-                    }
-                }
-
                 // Load the logged in user
                 this.loadUser(function(error, result) {
                     if (!error) {
                         callback && callback(error, result);
-                        $rootScope.$broadcast('user.login');
 
-                        // Check permissions for this route
+                        // check access to the current route/state again, now that session is activated
                         if ($state) {
-                            if ($state.$current && $state.$current.data && $state.$current.data.hasPermission) {
-                                if (!that.hasPermission($state.$current.data.hasPermission)) { 
-                                    $timeout(function() {
-                                        transitionTo(defaultRoute, true);
-                                    });
-                                }
-                            }
+                            checkAccessToState($state.current, $state.params);
                         } else if ($route) {
-                            if ($route.current && $route.current.$$route.hasPermission) {
-                                if (!that.hasPermission($route.current.$$route.hasPermission)) { 
-                                    $timeout(function() {
-                                        transitionTo(defaultRoute);
-                                    });
-                                }
-                            }
+                            checkAccessToRoute($route.current);
                         }
-                    } else {
+
+						$rootScope.$broadcast('user.login');
+					} else {
                         that.reset();
                     }
                 });
@@ -517,9 +541,9 @@ var userappModule = angular.module('UserApp', []);
             startHeartbeat: function(interval) {
                 var that = this;
 
-        		if (interval != undefined && interval < 10000) {
-        			return;
-        		}
+                if (interval != undefined && interval < 10000) {
+                    return;
+                }
 
                 clearInterval(heartBeatInterval);
                 heartBeatInterval = setInterval(function() {
