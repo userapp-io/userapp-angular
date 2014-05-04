@@ -820,7 +820,7 @@ var userappModule = angular.module('UserApp', []);
     });
 
     // OAuth URL directive
-    userappModule.directive('uaOauthLink', function($timeout, UserApp) {
+    userappModule.directive('uaOauthLink', function($timeout, $location, UserApp) {
         return {
             restrict: 'A',
             link: function(scope, element, attrs) {
@@ -836,19 +836,24 @@ var userappModule = angular.module('UserApp', []);
                         scope.loading = true;
                     });
 
+                    function getHashMode() {
+                        var hash = $location.absUrl().replace(window.location.protocol+'//'+window.location.host+window.location.pathname, '');
+                        return hash.replace($location.path(), '');
+                    };
+
                     var providerId = attrs.uaOauthLink;
                     var scopes = 'uaOauthScopes' in attrs ? (attrs.uaOauthScopes || '').split(',') : null;
-                    var defaultRedirectUrl = window.location.protocol+'//'+window.location.host+window.location.pathname+'#/oauth/callback/';
+                    var defaultRedirectUrl = window.location.protocol+'//'+window.location.host+window.location.pathname+getHashMode()+'/oauth/callback/';
                     var redirectUri = 'uaOauthRedirectUri' in attrs ? attrs.uaOauthRedirectUri : defaultRedirectUrl;
                     
-                    UserApp.OAuth.getAuthorizationUrl({ provider_id: providerId, redirect_uri: redirectUri, scopes: scopes }, function(error, result){
+                    UserApp.OAuth.getAuthorizationUrl({ provider_id: providerId, redirect_uri: redirectUri, scopes: scopes }, function(error, result) {
                         if (error) {
                             $timeout(function() {
                                 scope.error = error;
                                 scope.loading = false;
                             });
                             return handleError(scope, error, attrs.uaError);
-                        }else{
+                        } else {
                             window.location.href = result.authorization_url;
                         }
                     });
