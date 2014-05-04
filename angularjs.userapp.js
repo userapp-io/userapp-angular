@@ -103,11 +103,15 @@ var userappModule = angular.module('UserApp', []);
             });
         };
 
-
         var accessDeniedHandler = function() {
             $timeout(function () {
                 transitionTo(defaultRoute, true);
             });
+        };
+
+        var authenticationSuccessHandler = function() {
+            // Return true to transition to the default route/state
+            return true;  
         };
 
         /**
@@ -116,21 +120,24 @@ var userappModule = angular.module('UserApp', []);
          */
         var checkAccessToState = function(state, stateParams, stateChangeStartEvent) {
             if ((!state.data || (state.data && isPublic(state.data) == false)) && status.authenticated == false) {
-                if(stateChangeStartEvent)
+                if (stateChangeStartEvent) {
                     stateChangeStartEvent.preventDefault();
+                }
                 authenticationRequiredHandler(state, stateParams);
             } else if (state.data && state.data.hasPermission && user.permissions) {
                 if (!service.hasPermission(state.data.hasPermission)) {
-                    if(stateChangeStartEvent)
+                    if (stateChangeStartEvent) {
                         stateChangeStartEvent.preventDefault();
+                    }
                     accessDeniedHandler(user, state, stateParams);
                 }
             }
-            // only do auth check if user is loaded (indicated by user_id present)
+            // Only do auth check if user is loaded (indicated by user_id present)
             else if (state.data && state.data.authCheck && user.user_id) {
                 if (!state.data.authCheck(user, stateParams)) {
-                    if(stateChangeStartEvent)
+                    if (stateChangeStartEvent) {
                         stateChangeStartEvent.preventDefault();
+                    }
                     accessDeniedHandler(user, state, stateParams);
                 }
             }
@@ -142,19 +149,22 @@ var userappModule = angular.module('UserApp', []);
          */
         var checkAccessToRoute = function(routeData, routeChangeStartEvent) {
             if (routeData.$$route && isPublic(routeData.$$route) == false && status.authenticated == false) {
-                if(routeChangeStartEvent)
+                if (routeChangeStartEvent) {
                     routeChangeStartEvent.preventDefault();
+                }
                 authenticationRequiredHandler(routeChangeStartEvent, routeData);
             } else if (routeData.$$route && routeData.$$route.hasPermission && user.permissions) {
                 if (!service.hasPermission(routeData.$$route.hasPermission)) {
-                    if(routeChangeStartEvent)
+                    if (routeChangeStartEvent) {
                         routeChangeStartEvent.preventDefault();
+                    }
                     accessDeniedHandler(user, routeChangeStartEvent, routeData);
                 }
             } else if (routeData.$$route && routeData.$$route.authCheck && status.authenticated) {
                 if (!routeData.$$route.authCheck(user)) {
-                    if(routeChangeStartEvent)
+                    if (routeChangeStartEvent) {
                         routeChangeStartEvent.preventDefault();
+                    }
                     accessDeniedHandler(user, routeChangeStartEvent, routeData);
                 }
             }
@@ -176,6 +186,15 @@ var userappModule = angular.module('UserApp', []);
             onAuthenticationRequired: function(handler) {
                 authenticationRequiredHandler = handler;
             },
+
+            /**
+             * Overwrites the default handler that is invoked if a user authenticates successfully. If this function
+             * returns true, a transition to the default route/state will be made.
+             */
+            onAuthenticationSuccess: function(handler) {
+                authenticationSuccessHandler = handler;
+            },
+
             /**
              * Overwrites the default handler that is invoked if a route/state is activated that the currently logged in
              * user has no access to. Access is denied if the user does not have a required permission or authCheck
@@ -254,7 +273,7 @@ var userappModule = angular.module('UserApp', []);
                         }
 
                         checkAccessToState(toState, toParams, ev);
-					});
+                    });
                 } else if ($route) {
                     $rootScope.$on('$routeChangeStart', function(ev, data) {
                         // Check if this is the verify email route
@@ -292,7 +311,7 @@ var userappModule = angular.module('UserApp', []);
                     delete user[key];
                 }
 
-                // check access to the current route/state again, now that session is reset
+                // Check access to the current route/state again, now that session is reset
                 if ($state) {
                     checkAccessToState($state.current, $state.params);
                 } else if ($route) {
@@ -339,15 +358,15 @@ var userappModule = angular.module('UserApp', []);
                     if (!error) {
                         callback && callback(error, result);
 
-                        // check access to the current route/state again, now that session is activated
+                        // Check access to the current route/state again, now that session is activated
                         if ($state) {
                             checkAccessToState($state.current, $state.params);
                         } else if ($route) {
                             checkAccessToRoute($route.current);
                         }
 
-						$rootScope.$broadcast('user.login');
-					} else {
+                        $rootScope.$broadcast('user.login');
+                    } else {
                         that.reset();
                     }
                 });
@@ -414,6 +433,20 @@ var userappModule = angular.module('UserApp', []);
                                     });
                                 } else {
                                     callback && callback(error, result);
+                                }
+
+                                // Invoke the authenticationSuccessHandler handler
+                                if (authenticationSuccessHandler()) {
+                                    // Redirect to the default route
+                                    if ($state) {
+                                        $timeout(function() {
+                                            transitionTo(defaultRoute, true);
+                                        });
+                                    } else if ($route) {
+                                        $timeout(function() {
+                                            transitionTo(defaultRoute);
+                                        });
+                                    }
                                 }
                             });
                         }
