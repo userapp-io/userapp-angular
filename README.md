@@ -247,24 +247,28 @@ For the Angular router the target route is passed to the handler. For the UI rou
 To add required permissions to a route, use the `hasPermission` property and specify all the permissions as an array, like this:
 
 ```javascript
-$routeProvider.when('/admin', {templateUrl: 'partials/admin.html', hasPermission: ['admin']});
+$routeProvider.when('/admin', { templateUrl: 'partials/admin.html', hasPermission: ['admin'] });
 ```
 
 or as a string, like this:
 
 ```javascript
-$routeProvider.when('/admin', {templateUrl: 'partials/admin.html', hasPermission: 'admin'});
+$routeProvider.when('/admin', { templateUrl: 'partials/admin.html', hasPermission: 'admin' });
 ```
 
 For a more general authorization check, use the `authCheck` property and specify a function that takes the currently logged in user and returns `true` if access to this user should be allowed and `false` if access shall be denied.
 ```javascript
-$routeProvider.when('/admin', {templateUrl: 'partials/admin.html', authCheck: function(user) { return user.properties['abc'] === 'def' } });
+$routeProvider.when('/admin', { templateUrl: 'partials/admin.html', authCheck: function(user) { 
+    return user.properties['abc'] === 'def'
+}});
 ```
 
 If the UI router is used, the state parameters are passed as a second parameter:
 
 ```javascript
-$stateProvider.state('admin', { data: { public: false, authCheck: function(user, params) { return user.properties['orgId'] === params.id } } });
+$stateProvider.state('admin', { data: { public: false, authCheck: function(user, params) { 
+    return user.properties['orgId'] === params.id
+}}});
 ```
 
 If access is denied to the logged in user (either because a required permission was not found or `authCheck` returned false), the route/state change is prevented and the `authorizationDeniedHandler` is invoked. The default handler redirects to the default route. Another handler can be installed like this:
