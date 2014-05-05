@@ -8,6 +8,22 @@ var userappModule = angular.module('UserApp', []);
     // Expose the UserApp API
     userappModule.value('UserApp', UserApp);
 
+    /**
+     * Token storage, default is in a cookie. The PhoneGap integration will override this
+     * to store the token in localStorage instead.
+     */
+    UserApp.tokenStorage || (UserApp.tokenStorage = {
+        get: function() {
+            return Cookies.get('ua_session_token');
+        },
+        set: function(token) {
+            Cookies.set('ua_session_token', token, { expires: new Date(new Date().getTime() + 31536000000) });
+        },
+        remove: function() {
+            Cookies.expire('ua_session_token');
+        }
+    });
+
     // Directive error handler
     var handleError = function(scope, error, elementId) {
         if (!error) {
@@ -34,7 +50,7 @@ var userappModule = angular.module('UserApp', []);
         var user = {};
         var appId = null;
         var options = null;
-        var token = Cookies.get('ua_session_token');
+        var token = UserApp.tokenStorage.get();
         var status = { authorized: false, authenticated: false };
         var heartBeatInterval = -1;
         var defaultRoute = null;
@@ -305,7 +321,7 @@ var userappModule = angular.module('UserApp', []);
                 status.authenticated = false;
 
                 // Remove session cookie
-                Cookies.expire('ua_session_token');
+                UserApp.tokenStorage.remove();
 
                 for (var key in user) {
                     delete user[key];
@@ -341,7 +357,7 @@ var userappModule = angular.module('UserApp', []);
                     $rootScope.user.authenticated = true;
 
                     // Set session cookie
-                    Cookies.set('ua_session_token', token, { expires: new Date(new Date().getTime() + 31536000000) });
+                    UserApp.tokenStorage.set(token);
                 }
                 
                 return token;
