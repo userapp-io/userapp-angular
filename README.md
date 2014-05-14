@@ -358,7 +358,7 @@ $rootScope.$on('user.logout', function() {
 
 Please note that the `btoa()` function may not be supported by all browsers.
 
-On the back-end, use UserApp's [token.heartbeat()](https://app.userapp.io/#/docs/token/#heartbeat) or [user.get()](https://app.userapp.io/#/docs/user/#get) to verify that the token. The result should then be cached to reduce round-trips to UserApp.
+On the back-end, use UserApp's [token.heartbeat()](https://app.userapp.io/#/docs/token/#heartbeat) or [user.get()](https://app.userapp.io/#/docs/user/#get) to verify that the token is valid. The result should then be cached to reduce round-trips to UserApp.
 
 ## PhoneGap
 
