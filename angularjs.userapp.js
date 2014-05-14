@@ -42,7 +42,7 @@ var userappModule = angular.module('UserApp', []);
 
     // Function to detect if a route is public or not
     var isPublic = function(route) {
-        return (route.public == true || route.login == true || route.verify_email == true || route.set_password == true);
+        return (route && (route.public == true || route.login == true || route.verify_email == true || route.set_password == true));
     };
 
     // Authentication service
@@ -131,59 +131,49 @@ var userappModule = angular.module('UserApp', []);
         };
 
         /**
-         * Invokes authenticationRequired/accessDeniedHandler if state is protected. Prevents state transition
-         * from happening in these cases if a stateChangeStartEvent is given.
+         * Invokes authenticationRequired/accessDeniedHandler if state is protected.
+         * Returns false if access should be denied.
          */
-        var checkAccessToState = function(state, stateParams, stateChangeStartEvent) {
-            if ((!state.data || (state.data && isPublic(state.data) == false)) && status.authenticated == false) {
-                if (stateChangeStartEvent) {
-                    stateChangeStartEvent.preventDefault();
-                }
-                authenticationRequiredHandler(state, stateParams);
-            } else if (state.data && state.data.hasPermission && user.permissions) {
-                if (!service.hasPermission(state.data.hasPermission)) {
-                    if (stateChangeStartEvent) {
-                        stateChangeStartEvent.preventDefault();
+        var checkAccessToState = function(state, stateParams) {
+            if (state) {
+                if ((!state.data || (state.data && isPublic(state.data) == false)) && status.authenticated == false) {
+                    authenticationRequiredHandler(state, stateParams);
+                    return false;
+                } else if (state.data && state.data.hasPermission && user.permissions) {
+                    if (!service.hasPermission(state.data.hasPermission)) {
+                        accessDeniedHandler(user, state, stateParams);
+                        return false;
                     }
-                    accessDeniedHandler(user, state, stateParams);
+                }
+                // Only do auth check if user is loaded (indicated by user_id present)
+                else if (state.data && state.data.authCheck && user.user_id) {
+                    if (!state.data.authCheck(user, stateParams)) {
+                        accessDeniedHandler(user, state, stateParams);
+                        return false;
+                    }
                 }
             }
-            // Only do auth check if user is loaded (indicated by user_id present)
-            else if (state.data && state.data.authCheck && user.user_id) {
-                if (!state.data.authCheck(user, stateParams)) {
-                    if (stateChangeStartEvent) {
-                        stateChangeStartEvent.preventDefault();
-                    }
-                    accessDeniedHandler(user, state, stateParams);
-                }
-            }
+            return true;
         };
 
         /**
-         * Invokes authenticationRequired/accessDeniedHandler if route is protected. Prevents route transition
-         * from happening in these cases if a routeChangeStartEvent is given.
+         * Invokes authenticationRequired/accessDeniedHandler if route is protected. 
+         * Returns false if access should be denied.
          */
-        var checkAccessToRoute = function(routeData, routeChangeStartEvent) {
-            if (routeData.$$route && isPublic(routeData.$$route) == false && status.authenticated == false) {
-                if (routeChangeStartEvent) {
-                    routeChangeStartEvent.preventDefault();
-                }
-                authenticationRequiredHandler(routeChangeStartEvent, routeData);
-            } else if (routeData.$$route && routeData.$$route.hasPermission && user.permissions) {
-                if (!service.hasPermission(routeData.$$route.hasPermission)) {
-                    if (routeChangeStartEvent) {
-                        routeChangeStartEvent.preventDefault();
-                    }
-                    accessDeniedHandler(user, routeChangeStartEvent, routeData);
-                }
-            } else if (routeData.$$route && routeData.$$route.authCheck && status.authenticated) {
-                if (!routeData.$$route.authCheck(user)) {
-                    if (routeChangeStartEvent) {
-                        routeChangeStartEvent.preventDefault();
-                    }
-                    accessDeniedHandler(user, routeChangeStartEvent, routeData);
+        var checkAccessToRoute = function(route) {
+            if (route.$$route) {
+                if (isPublic(route.$$route) == false && status.authenticated == false) {
+                    authenticationRequiredHandler(route);
+                    return false;
+                } else if (route.$$route.hasPermission && user.permissions && !service.hasPermission(route.$$route.hasPermission)) {
+                    accessDeniedHandler(user, route);
+                    return false;
+                } else if (route.$$route.authCheck && status.authenticated && !route.$$route.authCheck(user)) {
+                    accessDeniedHandler(user, route);
+                    return false;
                 }
             }
+            return true;
         };
 
         // Expose the user object to HTML templates via the root scope
@@ -226,28 +216,63 @@ var userappModule = angular.module('UserApp', []);
             // Initialize the service
             init: function(config) {
                 var that = this;
+                var authResolver = {
+                    auth: function($q, user) {
+                        if ($state) {
+                            var state = states[this.self.name];
+                        }
+                        
+                        if (isPublic($route ? $route.current.$$route : state) == false) {
+                            var deferred = $q.defer();
+
+                            try {
+                                user.getCurrent().then(function() {
+                                    if ($route ? checkAccessToRoute($route.current) : checkAccessToState(state)) {
+                                        deferred.resolve();
+                                    } else {
+                                        deferred.reject();
+                                    }
+                                }, function() {
+                                    deferred.reject();
+                                });
+                            } catch(e) {
+                                deferred.reject(e);
+                            }
+
+                            return deferred.promise;
+                        } else {
+                            return true;
+                        }
+                    }
+                };
                 options = config;
 
                 if ($state) {
                     // Set the default state
                     defaultRoute = '';
 
-                    // Find the login state
                     for (var state in states) {
+                        // Add resolver for user and permissions
+                        states[state].resolve = (states[state].resolve || {});
+                        angular.extend(states[state].resolve, authResolver);
+
+                        // Found the login state
                         if (states[state].data && states[state].data.login) {
                             loginRoute = state;
-                            break;
                         }
                     }
                 } else if ($route) {
                     // Find the default route
                     defaultRoute = ($route.routes.null || { redirectTo: '' }).redirectTo;
 
-                    // Find the login route
                     for (var route in $route.routes) {
+                        // Add resolver for user and permissions
+                        $route.routes[route].resolve = ($route.routes[route].resolve || {});
+                        angular.extend($route.routes[route].resolve, authResolver);
+
+                        // Found the login route
                         if ($route.routes[route].login) {
                             loginRoute = $route.routes[route].originalPath;
-                            break;
                         }
                     }
                 }
@@ -288,7 +313,9 @@ var userappModule = angular.module('UserApp', []);
                             return;
                         }
 
-                        checkAccessToState(toState, toParams, ev);
+                        if (!checkAccessToState(toState, toParams)) {
+                            ev.preventDefault();
+                        }
                     });
                 } else if ($route) {
                     $rootScope.$on('$routeChangeStart', function(ev, data) {
@@ -298,7 +325,9 @@ var userappModule = angular.module('UserApp', []);
                             return;
                         }
 
-                        checkAccessToRoute(data, ev);
+                        if (!checkAccessToRoute(data)) {
+                            ev.preventDefault();
+                        }
                     });
                 }
             },

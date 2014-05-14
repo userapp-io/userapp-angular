@@ -100,9 +100,11 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
 
 ## Accessing the logged in user
 
+The logged in user has the same fields as the [user profile](https://app.userapp.io/#/docs/user/#properties) in UserApp. See below how to access it.
+
 **From templates**
 
-Access the logged in user profile using the `user` object. It has the same fields as the [user profile](https://app.userapp.io/#/docs/user/#properties) in UserApp.
+Access the logged in user profile using the `user` object.
 
 ```html
 <p>{{ user.first_name }}</p>
@@ -110,13 +112,13 @@ Access the logged in user profile using the `user` object. It has the same field
 
 **From controllers, services, etc.**
 
-To access the logged in user from your controllers, services, etc., use the `user` service like this:
+To access the logged in user from your controllers, services, etc., use the `current` property on the `user` service like this:
 
 ```javascript
 var currentUser = user.current;
 ```
 
-But it is recommended that you use the promise instead, as the user might not have been loaded when your controller loads.
+You can also use a promise to ensure that the user is loaded when accessing it, as the user might not have been loaded when your component loads. However, the user will always be loaded when your controller loads (see requirements for ui-router below).
 
 ```javascript
 user.getCurrent().then(function(currentUser) {
@@ -124,7 +126,11 @@ user.getCurrent().then(function(currentUser) {
 });
 ```
 
-It has the same fields as the [user profile](https://app.userapp.io/#/docs/user/#properties) in UserApp.
+ui-router requires the `resolve` property to be present on the states that should wait for the user profile to load. An empty object is enough:
+
+```javascript
+resolve: {}
+```
 
 ## Verify email address
 
@@ -238,7 +244,7 @@ The `login` route/state, the `verify_email` route/state, and the `set_password` 
 
 If the user is not signed in and accesses a non-public route, the route/state change is prevented and the `authenticationRequiredHandler` is invoked. The default handler transitions to the `login` route. Another handler can be installed like this:
 ```javascript
-user.onAuthenticationRequired(function(toState, toParams) {
+user.onAuthenticationRequired(function(route, stateParams) {
    // open login popup, do transition, ...
 });
 ```
@@ -274,7 +280,7 @@ $stateProvider.state('admin', { data: { public: false, authCheck: function(user,
 If access is denied to the logged in user (either because a required permission was not found or `authCheck` returned false), the route/state change is prevented and the `authorizationDeniedHandler` is invoked. The default handler redirects to the default route. Another handler can be installed like this:
 
 ```javascript
-user.onAccessDenied(function(user, state, params) {
+user.onAccessDenied(function(user, route, stateParams) {
     // show popup, do transition, ...
 });
 ```
