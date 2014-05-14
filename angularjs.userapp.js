@@ -46,7 +46,7 @@ var userappModule = angular.module('UserApp', []);
     };
 
     // Authentication service
-    userappModule.factory('user', function($rootScope, $location, $injector, $log, $timeout, $q) {
+    userappModule.factory('user', function($rootScope, $location, $injector, $log, $timeout, $q, $http) {
         var user = {};
         var appId = null;
         var options = null;
