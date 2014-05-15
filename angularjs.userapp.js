@@ -916,7 +916,7 @@ var userappModule = angular.module('UserApp', []);
         return {
             restrict: 'A',
             link: function(scope, element, attrs) {
-                element[0].style.display = 'none';
+                element.css('display', 'none');
 
                 scope.user = user.current;
                 var permissions = attrs.uaHasPermission.split(' ');
@@ -924,9 +924,9 @@ var userappModule = angular.module('UserApp', []);
                 if (permissions) {
                     scope.$watch('user', function() {
                         if (user.hasPermission(permissions)) {
-                            element[0].style.display = null;
+                            element.css('display', null);
                         } else {
-                            element[0].style.display = 'none';
+                            element.css('display', 'none');
                         }
                     }, true);
                 }
@@ -939,7 +939,7 @@ var userappModule = angular.module('UserApp', []);
         return {
             restrict: 'A',
             link: function(scope, element, attrs) {
-                element[0].style.display = 'none';
+                element.css('display', 'none');
 
                 scope.user = user.current;
                 var features = attrs.uaHasFeature.split(' ');
@@ -947,9 +947,9 @@ var userappModule = angular.module('UserApp', []);
                 if (features) {
                     scope.$watch('user', function() {
                         if (user.hasFeature(features)) {
-                            element[0].style.display = null;
+                            element.css('display', null);
                         } else {
-                            element[0].style.display = 'none';
+                            element.css('display', 'none');
                         }
                     }, true);
                 }
