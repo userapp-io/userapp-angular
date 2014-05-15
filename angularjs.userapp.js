@@ -916,6 +916,7 @@ var userappModule = angular.module('UserApp', []);
         return {
             restrict: 'A',
             link: function(scope, element, attrs) {
+                var display = element.css('display');
                 element.css('display', 'none');
 
                 scope.user = user.current;
@@ -924,7 +925,7 @@ var userappModule = angular.module('UserApp', []);
                 if (permissions) {
                     scope.$watch('user', function() {
                         if (user.hasPermission(permissions)) {
-                            element.css('display', null);
+                            element.css('display', display);
                         } else {
                             element.css('display', 'none');
                         }
@@ -939,6 +940,7 @@ var userappModule = angular.module('UserApp', []);
         return {
             restrict: 'A',
             link: function(scope, element, attrs) {
+                var display = element.css('display');
                 element.css('display', 'none');
 
                 scope.user = user.current;
@@ -947,7 +949,7 @@ var userappModule = angular.module('UserApp', []);
                 if (features) {
                     scope.$watch('user', function() {
                         if (user.hasFeature(features)) {
-                            element.css('display', null);
+                            element.css('display', display);
                         } else {
                             element.css('display', 'none');
                         }
