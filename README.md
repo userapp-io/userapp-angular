@@ -211,7 +211,7 @@ The template `partials/set-password.html` should consist of a form with an input
 
 ```html
 <form ua-set-password ng-show="!passwordSaved">
-    <input name="new_password" placeholder="New password"><br>
+    <input name="new_password" type="password" placeholder="New password"><br>
     <button type="submit">Save password</button>
         
     <p ng-show="error">{{ error.message }}</p>
