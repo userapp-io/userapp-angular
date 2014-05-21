@@ -211,8 +211,8 @@ The template `partials/set-password.html` should consist of a form with an input
 
 ```html
 <form ua-set-password ng-show="!passwordSaved">
-    <input name="new_password" placeholder="New password"><br>
-    <button type="submit">Send email</button>
+    <input name="new_password" type="password" placeholder="New password"><br>
+    <button type="submit">Save password</button>
         
     <p ng-show="error">{{ error.message }}</p>
 </form>
@@ -287,7 +287,7 @@ user.onAccessDenied(function(user, route, stateParams) {
 
 For the Angular router the target route is passed as second parameter to the handler. For the UI router, the target state and the target state parameters are passed as parameters two and three.
 
-After a successful login, the default behavior is to transition to the default route. To change this behaviour, override the `authenticationSuccessHandler` like this:
+After a successful login, the default behavior is to transition to the default route. To change this behavior, override the `authenticationSuccessHandler` like this:
 
 ```javascript
 user.onAuthenticationSuccess(function() {
