@@ -42,10 +42,10 @@ Take the [course on Codecademy](http://www.codecademy.com/courses/web-beginner-e
   var app = angular.module('myApp', [..., 'UserApp']);
   ```
 
-3. Inject and initiate the service in your root scope (*app.js*) with your [App Id](https://help.userapp.io/customer/portal/articles/1322336-how-do-i-find-my-app-id-):
+3. Inject and initiate the service in your `run()` block (*app.js*) with your [App Id](https://help.userapp.io/customer/portal/articles/1322336-how-do-i-find-my-app-id-):
 
   ```javascript
-  app.run(function($rootScope, user) {
+  app.run(function(user) {
       user.init({ appId: 'YOUR_APP_ID' });
   });
   ```
