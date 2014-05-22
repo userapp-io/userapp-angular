@@ -879,7 +879,7 @@ var userappModule = angular.module('UserApp', []);
                     var redirectUri = 'uaOauthRedirectUri' in attrs ? attrs.uaOauthRedirectUri : defaultRedirectUrl;
                     
                     // PhoneGap/iOS fix
-                    if (window.device && window.device.platform == 'iPhone') {
+                    if (window.device && window.device.platform == 'iOS') {
                         if (redirectUri.indexOf('file://') == 0) {
                             redirectUri = 'https://oauth.userapp.io/';
                         }
